@@ -1,193 +1,19 @@
 #include <Arduino.h>
 #include <Adafruit_TinyUSB.h>
-#include "nkro_keyboard.cpp"
+#include "pin_mapping.h"
+#include "nkro_keyboard.h"
+#include "input_enums.h"
+#include "input_handlers.h"
 
-#define DEBOUNCE_TICKS_MS 15
 
-
-// Report ID
-enum {
-  NONE = 0,
-  RID_KEYBOARD,
-  RID_MOUSE,
-  RID_GAMEPAD,
-  RID_CONSUMER_CONTROL, // Media, volume etc ..
-};
 
 const uint8_t desc_hid_report[] = {
-  TUD_HID_REPORT_DESC_NKRO_KEYBOARD (HID_REPORT_ID(RID_KEYBOARD)),
-  TUD_HID_REPORT_DESC_MOUSE         (HID_REPORT_ID(RID_MOUSE)),
-  TUD_HID_REPORT_DESC_GAMEPAD       (HID_REPORT_ID(RID_GAMEPAD)),
-  TUD_HID_REPORT_DESC_CONSUMER      (HID_REPORT_ID(RID_CONSUMER_CONTROL)),
+  TUD_HID_REPORT_DESC_NKRO_KEYBOARD (HID_REPORT_ID(KEYBOARD)),
+  TUD_HID_REPORT_DESC_MOUSE         (HID_REPORT_ID(MOUSE)),
+  TUD_HID_REPORT_DESC_GAMEPAD       (HID_REPORT_ID(GAMEPAD)),
+  TUD_HID_REPORT_DESC_CONSUMER      (HID_REPORT_ID(CONSUMER_CONTROL)),
 };
 
-enum {
-  KEYBOARD = RID_KEYBOARD,
-  MOUSE = RID_MOUSE,
-  GAMEPAD_BUTTON = RID_GAMEPAD,
-  CONSUMER = RID_CONSUMER_CONTROL,
-  GAMEPAD_HAT,
-  GAMEPAD_AXIS,
-};
-
-enum { 
-  GAMEPAD_LEFT_ANALOG_X,
-  GAMEPAD_LEFT_ANALOG_Y,
-  GAMEPAD_LEFT_TRIGGER,
-  GAMEPAD_RIGHT_ANALOG_X,
-  GAMEPAD_RIGHT_ANALOG_Y,
-  GAMEPAD_RIGHT_TRIGGER
-};
-
-//custom addition to match existing MOUSE_BUTTON_* enums
-enum {
-  MOUSE_SCROLL_UP     = TU_BIT(5),
-  MOUSE_SCROLL_DOWN   = TU_BIT(6),
-  MOUSE_SCROLL_LEFT   = TU_BIT(7),
-  MOUSE_SCROLL_RIGHT  = TU_BIT(8),
-  MOUSE_MOVE_UP       = TU_BIT(9),
-  MOUSE_MOVE_DOWN     = TU_BIT(10),
-  MOUSE_MOVE_LEFT     = TU_BIT(11),
-  MOUSE_MOVE_RIGHT    = TU_BIT(12),
-};
-
-struct PinMapping {
-  PinName pin_name = NC;
-  int input_type = 0;
-  u_int16_t input_id = 0; //this can be keycodes, consumer control keys, mouse buttons, or gamepad buttons
-  
-  int value = 0;
-  int previous_value = 0;
-  uint last_change_time = 0;
-  
-  bool analog = false;
-  bool invert = false;
-  //deadzone being/end?
-  #define ADC_MAX_VALUE 1024
-  int max_report_value = 256; //Gamepad descriptor is currently set to only use 8-bit axis, so the max report value is 256
-  int activation_value = 30; 
-  int center = ADC_MAX_VALUE / 2; //TODO allow calibrating this value dynamically
-  int range = center; //TODO allow calibrating this value dynamically
-  float scale = (float) max_report_value / (float) ADC_MAX_VALUE + 0.05; //TODO allow calibrating this value dynamically
-  float deadzone_percent = 0.05; 
-  int change_amount_before_update = ((float) ADC_MAX_VALUE * 0.005);
-
-  
-  bool quick_release = false; //TODO implement
-  int counter_strafe_help_time_ms = 0; //TODO implement
-
-
-
-  PinMapping(PinName pin = NC, int type = 0, u_int16_t id = 0, bool isAnalog = false, bool isInverted = false, 
-    bool quickRelease = false, int counterStrafeHelpTime = 0)
-
-      : pin_name(pin), input_type(type), input_id(id), analog(isAnalog), invert(isInverted), 
-        //these are unimplemented
-        quick_release(quickRelease), counter_strafe_help_time_ms(counterStrafeHelpTime),
-        value(0), previous_value(0) {}
-  
-  void update_value() {
-    previous_value = value;
-    
-    if (is_bounce()) return; //debounce implementation
-
-    int new_value = read_value();
-    
-    //if the read value is within the deadzone, set the value to centered and return
-    if (abs(new_value - center) < (int) ((float)max_report_value * deadzone_percent)) {
-      value = center;
-    }
-    //prevents over-reporting of thumbstick movements as there is noise in the ADC
-    else if (analog and abs(previous_value - new_value) < change_amount_before_update) return;
-    
-    value = new_value;
-
-    //keep track of the time when the value is changed
-    if (is_just_changed()) {
-      last_change_time = millis();
-    }
-  }
-
-
-
-  int get_value_digital() {
-    int value = digitalRead(pin_name);
-
-    //TODO adjust this so that the "activated" state can be defined. I want 0 to always be not activated, and 1 to be activated, will similify some of the value == HIGH/LOW checks and multipliers
-
-    if (invert) {
-      value = 1 - value;
-    }
-
-    //aply scaling
-    value = (int) ((float) value * scale);
-
-    return value;
-  }
-  int get_value_analog() {
-    int value = analogRead(pin_name);
-
-    //center the ADC value to 0
-    value = value - center;
-    
-    //apply scaling
-    value = (int) (value * scale);
-    
-    //clamping
-    value = min(max(value, -max_report_value / 2), max_report_value / 2);
-
-    if (invert) {
-      value = -value;
-    }
-    return value;
-  }
-  int read_value() {
-    if (analog) {
-      return get_value_analog();
-    }
-
-    return get_value_digital();;
-  }
-
-
-  const int get_value() {
-    return value;
-  }
-
-  const bool is_pressed(int test_value = -1) {
-    //if no value is supplied, default to the current value
-    if (test_value == -1) test_value = value;
-
-    if (analog) {
-      //TODO implement quick-release here
-      return test_value >= activation_value;
-    }
-
-    return test_value == LOW;//TODO: change this to have scaling compatibility
-  }
-  const bool is_released(int test_value = -1) {
-    //if no value is supplied, default to the current value
-    if (test_value == -1) test_value = value;
-
-    if (analog) {
-      return not is_pressed(test_value);
-    }
-
-    return test_value == HIGH;//TODO: change this to have scaling compatibility
-  }
-  const bool is_just_pressed() {
-    return is_pressed() and is_released(previous_value);
-  }
-  const bool is_just_released() {
-    return is_released() and is_pressed(previous_value);
-  }
-  const bool is_just_changed() {
-    return is_just_pressed() or is_just_released();
-  }
-  const bool is_bounce() {
-    return (millis() - last_change_time) <= DEBOUNCE_TICKS_MS;
-  }
-};
 
 PinMapping pins_in_use[] = {
     //thumb
@@ -232,8 +58,7 @@ Adafruit_USBD_CDC usb_serial; //the adafruit tinyusb serial object must be used 
 Adafruit_USBD_HID usb_hid;
 
 
-hid_mouse_report_t mouse;
-hid_gamepad_report_t gamepad;
+
 
 
 void setup() {
@@ -255,116 +80,7 @@ void setup() {
   while (!TinyUSBDevice.mounted()) delay(100);
 }
 
-bool handleKeyboardNKRO(PinMapping &pin_mapping) {
-    bool keys_changed = false;
 
-    if (pin_mapping.is_just_pressed()) {
-      pressKeyNKRO(pin_mapping.input_id);
-      keys_changed = true;
-    }
-    else if (pin_mapping.is_just_released()) {
-      releaseKeyNKRO(pin_mapping.input_id);
-      keys_changed = true;
-    }
-    //update so that next iteration, we can detect press/unpress
-    return keys_changed;
-}
-
-const uint8_t handleMouseButtons(PinMapping &pin_mapping) {
-  //if the input_id is a normal mouse button, and the button is pressed, return it's corresponding bit
-  return (pin_mapping.is_pressed() and pin_mapping.input_id <= MOUSE_BUTTON_FORWARD) ? pin_mapping.input_id : 0;
-}
-
-const int8_t handleMouseMovementX(PinMapping &pin_mapping) {
-  if (not pin_mapping.is_pressed()) return 0;
-
-  switch (pin_mapping.input_id) {
-  case MOUSE_MOVE_LEFT:
-    return -pin_mapping.get_value();
-    break;
-  case MOUSE_MOVE_RIGHT:
-    return pin_mapping.get_value();
-    break;
-  default:
-    return 0;
-  }
-}
-const int8_t handleMouseMovementY(PinMapping &pin_mapping) {
-  if (not pin_mapping.is_pressed()) return 0;
-
-  switch (pin_mapping.input_id) {
-  case MOUSE_MOVE_UP:
-    return -pin_mapping.get_value();
-    break;
-  case MOUSE_MOVE_DOWN:
-    return pin_mapping.get_value();
-    break;
-  default:
-    return 0;
-  }
-}
-
-const int8_t handleMouseScroll(PinMapping &pin_mapping) {
-  if (not pin_mapping.is_just_pressed()) return 0;
-  
-  switch (pin_mapping.input_id) {
-  case MOUSE_SCROLL_UP:
-    return -pin_mapping.get_value();
-    break;
-  case MOUSE_SCROLL_DOWN:
-    return -pin_mapping.get_value();
-    break;
-
-  default:
-    return 0;
-  }
-}
-const int8_t handleMousePan(PinMapping &pin_mapping) {
-  if (not pin_mapping.is_just_pressed()) return 0;
-
-  switch (pin_mapping.input_id) {
-  case MOUSE_SCROLL_LEFT:
-    return -pin_mapping.get_value();
-    break;
-  case MOUSE_SCROLL_RIGHT:
-    return pin_mapping.get_value();
-    break;
-  default:
-    return 0;
-  }
-}
-
-
-const uint32_t handleGamepadButtons(PinMapping &pin_mapping) {
-  return (pin_mapping.is_pressed()) ? (uint32_t) pin_mapping.input_id : 0;
-}
-
-const uint8_t handleGamepadHat(PinMapping &pin_mapping) {
-  return (pin_mapping.is_pressed()) ? pin_mapping.input_id : GAMEPAD_HAT_CENTERED;
-}
-
-void handleGamepadAxis(PinMapping &pin_mapping) {
-  switch (pin_mapping.input_id) {
-  case GAMEPAD_LEFT_ANALOG_X:
-    gamepad.x = pin_mapping.get_value();
-    break;
-  case GAMEPAD_LEFT_ANALOG_Y:
-    gamepad.y = pin_mapping.get_value();
-    break;
-  case GAMEPAD_LEFT_TRIGGER:
-    gamepad.rx = pin_mapping.get_value();
-    break;
-  case GAMEPAD_RIGHT_ANALOG_X:
-    gamepad.z = pin_mapping.get_value();
-    break;
-  case GAMEPAD_RIGHT_ANALOG_Y:
-    gamepad.rz = pin_mapping.get_value();
-    break;
-  case GAMEPAD_RIGHT_TRIGGER:
-    gamepad.ry = pin_mapping.get_value();
-    break;
-  }
-}
 
 
 
@@ -374,7 +90,6 @@ void loop() {
     //delayMicroseconds(1000);
     return;
   }
-
 
   bool nkro_updated = false;
 
@@ -418,19 +133,19 @@ void loop() {
   }
 
   if (nkro_updated) {
-    NKROReport(usb_hid, RID_KEYBOARD);
+    NKROReport(usb_hid, KEYBOARD);
   }
   if (
     gamepad.buttons != last_gamepad.buttons or
     gamepad.hat != last_gamepad.hat or
     gamepad.x  != last_gamepad.x  or
-    gamepad.y  != last_gamepad.y  //or
-    //gamepad.z  != last_gamepad.z  or
-    //gamepad.rz != last_gamepad.rz or
-    //gamepad.rx != last_gamepad.rx or
-    //gamepad.ry != last_gamepad.ry
+    gamepad.y  != last_gamepad.y  or
+    gamepad.z  != last_gamepad.z  or
+    gamepad.rz != last_gamepad.rz or
+    gamepad.rx != last_gamepad.rx or
+    gamepad.ry != last_gamepad.ry
   ) {
-    usb_hid.sendReport(RID_GAMEPAD, &gamepad, sizeof(gamepad));
+    usb_hid.sendReport(GAMEPAD, &gamepad, sizeof(gamepad));
     Serial.println("send gamepad");
     //Serial.println(gamepad.x);
     //Serial.println(last_gamepad.x);
@@ -442,17 +157,13 @@ void loop() {
     mouse.wheel != 0.0 or
     mouse.pan != 0.0
   ) {
-    usb_hid.sendReport(RID_MOUSE, &mouse, sizeof(mouse));
+    usb_hid.sendReport(MOUSE, &mouse, sizeof(mouse));
     Serial.println("send mouse");
   }
   //TODO: consumer control keys
 
-
   //we don't need to run at full speed. My measurement showed that iterations take ~43 microseconds. This could possible help avoid USB buffer issues, though idk if that's even a problem
   delayMicroseconds(457);
-  //wdelay(50);
-  //Serial.println(digitalRead(PB_15));
-  //Serial.println(analogRead(PA_1));
 }
 
 

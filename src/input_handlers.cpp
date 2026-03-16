@@ -8,9 +8,10 @@ const uint8_t handleMouseButtons(PinMapping &pin_mapping) {
   return (pin_mapping.is_pressed() and pin_mapping.input_id <= MOUSE_BUTTON_FORWARD) ? pin_mapping.input_id : 0;
 }
 
+
 const int8_t handleMouseMovementX(PinMapping &pin_mapping) {
   if (not pin_mapping.is_pressed()) return 0;
-
+  //TODO: Implement control rotation here
   switch (pin_mapping.input_id) {
   case MOUSE_MOVE_LEFT:
     return -pin_mapping.get_value();
@@ -25,7 +26,7 @@ const int8_t handleMouseMovementX(PinMapping &pin_mapping) {
 
 const int8_t handleMouseMovementY(PinMapping &pin_mapping) {
   if (not pin_mapping.is_pressed()) return 0;
-
+  //TODO: Implement control rotation here
   switch (pin_mapping.input_id) {
   case MOUSE_MOVE_UP:
     return -pin_mapping.get_value();
@@ -78,20 +79,22 @@ const uint8_t handleGamepadHat(PinMapping &pin_mapping) {
 }
 
 void handleGamepadAxis(PinMapping &pin_mapping) {
+
+  //TODO: Implement control rotation here
   switch (pin_mapping.input_id) {
-  case GAMEPAD_LEFT_ANALOG_X:
+  case GAMEPAD_LEFT_STICK_X:
     gamepad.x = pin_mapping.get_value();
     break;
-  case GAMEPAD_LEFT_ANALOG_Y:
+  case GAMEPAD_LEFT_STICK_Y:
     gamepad.y = pin_mapping.get_value();
     break;
   case GAMEPAD_LEFT_TRIGGER:
     gamepad.rx = pin_mapping.get_value();
     break;
-  case GAMEPAD_RIGHT_ANALOG_X:
+  case GAMEPAD_RIGHT_STICK_X:
     gamepad.z = pin_mapping.get_value();
     break;
-  case GAMEPAD_RIGHT_ANALOG_Y:
+  case GAMEPAD_RIGHT_STICK_Y:
     gamepad.rz = pin_mapping.get_value();
     break;
   case GAMEPAD_RIGHT_TRIGGER:

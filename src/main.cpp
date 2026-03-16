@@ -1,30 +1,56 @@
 #include <Arduino.h>
 #include <Adafruit_TinyUSB.h>
+
+#include "pin_declaration.h"
 #include "pin_mapping.h"
+#include "input_augmentation.h"
 #include "nkro_keyboard.h"
 #include "input_enums.h"
 #include "input_handlers.h"
-
-
 
 const uint8_t desc_hid_report[] = {
   TUD_HID_REPORT_DESC_NKRO_KEYBOARD (HID_REPORT_ID(KEYBOARD)),
   TUD_HID_REPORT_DESC_MOUSE         (HID_REPORT_ID(MOUSE)),
   TUD_HID_REPORT_DESC_GAMEPAD       (HID_REPORT_ID(GAMEPAD)),
-  TUD_HID_REPORT_DESC_CONSUMER      (HID_REPORT_ID(CONSUMER_CONTROL)),
+  //TUD_HID_REPORT_DESC_CONSUMER      (HID_REPORT_ID(CONSUMER_CONTROL)),
 };
 
+//TODO figure out a nicer way to do this, to avoid repeating the pin name
+//Maybe this could be fixed by mapping pins to unique identifier names, like thumb_x or index_tip
+std::map<uint, Pin> pin_map = {
+  { PA_0, Pin(PA_0, true) },
+  { PA_1, Pin(PA_1, true) },
+  { PA_2, Pin(PA_2) },
+  { PB_9, Pin(PB_9) },
+  { PB_8, Pin(PB_8) },
+  { PB_7, Pin(PB_7) },
+  { PB_6, Pin(PB_6) },
+  { PB_5, Pin(PB_5) },
+  { PB_4, Pin(PB_4) },
+  { PB_3, Pin(PB_3) },
+  { PA_15, Pin(PA_15) },
+  { PA_10, Pin(PA_10) },
+  { PA_9, Pin(PA_9) },
+  { PA_8, Pin(PA_8) },
+  { PB_10, Pin(PB_10) },
+  { PB_1, Pin(PB_1) },
+  { PB_0, Pin(PB_0) },
+  { PA_7, Pin(PA_7) },
+  { PA_6, Pin(PA_6) },
+};
 
-PinMapping pins_in_use[] = {
+PinMapping pin_bindings[] = {
     //thumb
-    //TODO figure out how to add control rotation
-    PinMapping(PA_0, KEYBOARD, HID_KEY_S, true, true),  //x (+3.3v forward)
-    PinMapping(PA_0, KEYBOARD, HID_KEY_W, true, false),
-
-    PinMapping(PA_1, KEYBOARD, HID_KEY_A, true, true),  //y (+3.3v up)
+    //TODO re-implement gamepad binding logic, as values centered at 0 don't work properly
     PinMapping(PA_1, KEYBOARD, HID_KEY_D, true, false),
+    PinMapping(PA_0, KEYBOARD, HID_KEY_W, true, false),
+    PinMapping(PA_1, KEYBOARD, HID_KEY_A, true, true),  //y (+3.3v up)
+    PinMapping(PA_0, KEYBOARD, HID_KEY_S, true, true),  //x (+3.3v forward)
+    
+    PinMapping(PA_1, GAMEPAD_AXIS, GAMEPAD_LEFT_STICK_X, true, false),
+    PinMapping(PA_0, GAMEPAD_AXIS, GAMEPAD_LEFT_STICK_Y, true, true),
 
-    PinMapping(PA_2, KEYBOARD, HID_KEY_1),  //click //broken atm
+    PinMapping(PA_2, KEYBOARD, HID_KEY_1),  //click
 
     //index
     PinMapping(PB_9, KEYBOARD, HID_KEY_1),  //tip
@@ -51,6 +77,14 @@ PinMapping pins_in_use[] = {
     PinMapping(PA_6, KEYBOARD, HID_KEY_CONTROL_LEFT),  //pad
 };
 
+InputAugmentation augmentations[] = {
+  //TODO this needs to be fixed. Currently causes nkro reports to spam like crazy
+  //I think it may be better to modify the Pin value directly, instead of modifying the pin mapping's value
+  InputAugmentation::rotation(&pin_map[PA_0], &pin_map[PA_1], radians(-0.0f)),
+  InputAugmentation::rotation(&pin_map[PA_1], &pin_map[PA_0], radians(-0.0f)),
+  //InputAugmentation::rotation(&pin_bindings[2], &pin_bindings[3], radians(90.0f)),
+};
+
 
 Adafruit_USBD_CDC usb_serial; //the adafruit tinyusb serial object must be used to retain both HID and serial communication
 
@@ -63,18 +97,23 @@ Adafruit_USBD_HID usb_hid;
 
 void setup() {
   usb_serial.begin(115200);
-  delay(200);
+  //delay(50);
   
   //HID setup  
   usb_hid.setPollInterval(2);
   usb_hid.setReportDescriptor(desc_hid_report, sizeof(desc_hid_report));
   usb_hid.begin();
+
+
   
-  
-  //configure pinmode for button pins
-  const size_t NUM_PINS = sizeof(pins_in_use) / sizeof(pins_in_use[0]);
-  for (PinMapping &pin_mapping : pins_in_use) {
-    pinMode(pin_mapping.pin_name, INPUT_PULLUP);
+  //setup pins for pullup/pulldown
+  for (const auto& [key, pin] : pin_map) {
+    if (pin.analog) {
+      pinMode(pin.pin_name, INPUT_ANALOG);
+      continue;
+    }
+    if (pin.inactive_value == LOW) pinMode(pin.pin_name, INPUT_PULLDOWN);
+    else pinMode(pin.pin_name, INPUT_PULLUP);
   }
 
   while (!TinyUSBDevice.mounted()) delay(100);
@@ -91,6 +130,30 @@ void loop() {
     return;
   }
 
+  //delay(50);
+  
+
+  //update all pin readings as concurrently as possible
+  for (auto& [key, pin] : pin_map) {
+    pin.update();
+  }
+
+  //apply input augmentations
+  //TODO this absolutely 100% must only apply to pin readings, not pin mappings
+  for (auto& augment : augmentations) {
+    augment.apply_augmentations();
+  }
+
+  for (auto& binding : pin_bindings) {
+    binding.update_value();
+  }
+
+
+  //Serial.println();
+  Serial.println((String) pin_bindings[1].value + ", " + (String) pin_bindings[1].previous_value);
+  //Serial.println((String) pin_bindings[0].is_pressed() + ", " + (String) pin_bindings[0].is_released(pin_bindings[0].previous_value));
+  
+
   bool nkro_updated = false;
 
   hid_mouse_report_t last_mouse = mouse;
@@ -102,29 +165,29 @@ void loop() {
   memset(&gamepad, 0, sizeof(gamepad));
   gamepad.hat = GAMEPAD_HAT_CENTERED;
 
-  for (PinMapping &pin_mapping : pins_in_use) {
-    //if analog
-    pin_mapping.update_value();
-
-    switch (pin_mapping.input_type) {
+  for (PinMapping &pin_bindingsping : pin_bindings) {
+    switch (pin_bindingsping.input_type) {
       case KEYBOARD:
-        nkro_updated = nkro_updated or handleKeyboardNKRO(pin_mapping);
+        nkro_updated = nkro_updated or handleKeyboardNKRO(pin_bindingsping);
         break;
       case MOUSE:
-        mouse.buttons |= handleMouseButtons(pin_mapping);
-        mouse.x += handleMouseMovementX(pin_mapping);
-        mouse.y += handleMouseMovementY(pin_mapping);
-        mouse.wheel += handleMouseScroll(pin_mapping);
-        mouse.pan += handleMousePan(pin_mapping);
+      //TODO: Simplify this to be more like the gamepad axis handler
+        mouse.buttons |= handleMouseButtons(pin_bindingsping);
+        mouse.x += handleMouseMovementX(pin_bindingsping);
+        mouse.y += handleMouseMovementY(pin_bindingsping);
+        mouse.wheel += handleMouseScroll(pin_bindingsping);
+        mouse.pan += handleMousePan(pin_bindingsping);
         break;
       case GAMEPAD_BUTTON:
-        gamepad.buttons |= handleGamepadButtons(pin_mapping);
+      //TODO: Simplify this to be more like the gamepad axis handler
+        gamepad.buttons |= handleGamepadButtons(pin_bindingsping);
         break;
       case GAMEPAD_HAT:
-        gamepad.hat = handleGamepadHat(pin_mapping);
+      //TODO: Simplify this to be more like the gamepad axis handler
+        gamepad.hat = handleGamepadHat(pin_bindingsping);
         break;
       case GAMEPAD_AXIS:
-        handleGamepadAxis(pin_mapping); //I think this might be a better convention than the previous ones. It will be easier to separate out into multiple files if needed
+        handleGamepadAxis(pin_bindingsping); //I think this might be a better convention than the previous ones. It will be easier to separate out into multiple files if needed
         break;
       //case RID_CONSUMER_CONTROL:
         //usb_hid.sendReport16(RID_CONSUMER_CONTROL, HID_USAGE_CONSUMER_VOLUME_DECREMENT);
@@ -133,6 +196,7 @@ void loop() {
   }
 
   if (nkro_updated) {
+    //TODO fix the reporting logic for this, possibly even look into a queue system 
     NKROReport(usb_hid, KEYBOARD);
   }
   if (
@@ -250,7 +314,7 @@ void setup() {
 
 void scanInputs() {
     // this will eventually contain:
-    // pin_mapping.update_value()
+    // pin_bindingsping.update_value()
 }
 
 /* -----------------------------

@@ -1,42 +1,21 @@
 #include "pin_mapping.h"
 
-PinMapping::PinMapping(
-    PinName pin,
-    int type,
-    u_int16_t id,
-    bool isAnalog,
-    bool isInverted,
-    bool quickRelease,
-    int counterStrafeHelpTime
-)
-    : pin_name(pin), 
-    input_type(type), 
-    input_id(id), 
-    analog(isAnalog), 
-    invert(isInverted), 
-    //these are unimplemented
-    quick_release(quickRelease), 
-    counter_strafe_help_time_ms(counterStrafeHelpTime),
-    value(0), 
-    previous_value(0) 
-{
-    
-}
-  
 void PinMapping::update_value() {
     previous_value = value;
 
-    if (is_bounce()) return; //debounce implementation
+    if (is_bounce() and not analog) return; //debounce implementation
 
     int new_value = read_value();
 
-    //if the read value is within the deadzone, set the value to centered and return
-    if (abs(new_value - center) < (int) ((float)max_report_value * deadzone_percent)) {
-        value = center;
+    //apply deadzone
+    if (analog and abs(new_value) < (int) abs((float)max_report_value * deadzone_percent)) {
+        new_value = 0;
     }
+    //TODO problem with this logic: because input augments modify the value of the pin mapping, this "change amount before update" check almost always fails.
     //prevents over-reporting of thumbstick movements as there is noise in the ADC
-    else if (analog and abs(previous_value - new_value) < change_amount_before_update) return;
-
+    if (analog and abs(previous_value - new_value) < change_amount_before_update) {
+        //return;
+    }
     value = new_value;
 
     //keep track of the time when the value is changed
@@ -45,74 +24,80 @@ void PinMapping::update_value() {
     }
 }
 
-int PinMapping::get_value_digital() {
-    int value = digitalRead(pin_name);
+const int PinMapping::get_value_digital() {
+    bool is_activated = pin_map[pin_name].value != pin_map[pin_name].inactive_value;
 
-    //TODO adjust this so that the "activated" state can be defined. I want 0 to always be not activated, and 1 to be activated, will similify some of the value == HIGH/LOW checks and multipliers
+    int temp_value = (int) is_activated;
+
+    if (is_activated) temp_value = 1;
+    else temp_value = 0;
 
     if (invert) {
-        value = 1 - value;
+        temp_value = -temp_value;
     }
-
-    //aply scaling
-    value = (int) ((float) value * scale);
-
-    return value;
-}
-
-int PinMapping::get_value_analog() {
-    int value = analogRead(pin_name);
-
-    //center the ADC value to 0
-    value = value - center;
 
     //apply scaling
-    value = (int) (value * scale);
+    //TODO fix issue that causes this to always return 0 due to float > int casting or something
+    //value = (int) ((float) value * scale);
+
+    return temp_value;
+}
+
+const int PinMapping::get_value_analog() {
+    int temp_value = pin_map[pin_name].value;
+
+    //center the ADC value to 0
+    //commented out because the pin declaration will handle centering
+    //temp_value = temp_value - center;
+
+    //apply scaling
+    temp_value = (int) (temp_value * scale);
 
     //clamping
-    value = min(max(value, -max_report_value / 2), max_report_value / 2);
+    temp_value = min(max(temp_value, -max_report_value / 2 + 1), max_report_value / 2 - 1);
 
     if (invert) {
-        value = -value;
+        temp_value = -temp_value;
     }
-    return value;
+    return temp_value;
 }
-int PinMapping::read_value() {
+const int PinMapping::read_value() {
     if (analog) {
         return get_value_analog();
     }
 
-    return get_value_digital();;
+    return get_value_digital();
 }
 
 const int PinMapping::get_value() {
     return value;
 }
 
+const bool PinMapping::is_pressed() {
+    return is_pressed(value);
+}
 const bool PinMapping::is_pressed(int test_value) {
-    //if no value is supplied, default to the current value
-    if (test_value == -1) test_value = value;
-
     if (analog) {
         //TODO implement quick-release here
         return test_value >= activation_value;
     }
 
-    return test_value == LOW;//TODO: change this to have scaling compatibility
+    return test_value != 0;//TODO: change this to have scaling compatibility
+}
+const bool PinMapping::is_released() {
+    return is_released(value);
 }
 const bool PinMapping::is_released(int test_value) {
-    //if no value is supplied, default to the current value
-    if (test_value == -1) test_value = value;
-
     if (analog) {
         return not is_pressed(test_value);
     }
 
-    return test_value == HIGH;//TODO: change this to have scaling compatibility
+    return test_value == 0;//TODO: change this to have scaling compatibility
 }
 const bool PinMapping::is_just_pressed() {
-    return is_pressed() and is_released(previous_value);
+    return is_pressed() and is_released(previous_value); //TODO maybe add a third condition that the change in value has to be significant, to avoid ADC noise?
 }
+//TODO possible issues with is_just_released()
 const bool PinMapping::is_just_released() {
     return is_released() and is_pressed(previous_value);
 }

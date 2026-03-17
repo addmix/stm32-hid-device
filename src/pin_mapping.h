@@ -19,7 +19,7 @@ struct PinMapping {
   bool invert = false;
 
   int max_report_value = 256;
-  int activation_value = 30;
+  int activation_value = 50;
   //int center = ADC_MAX_VALUE / 2; 
   //int range = ADC_MAX_VALUE / 2;
 

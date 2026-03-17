@@ -95,6 +95,36 @@ Adafruit_USBD_HID usb_hid;
 
 
 
+
+
+
+
+void parse_serial() {
+  if (Serial.available() > 0) {
+    // read the incoming byte:
+    int incomingByte = Serial.read();
+
+    // say what you got:
+    Serial.print("Byte received: ");
+    Serial.println(incomingByte, DEC);
+
+    //if first few bytes aren't a recognized command, empty the buffer completely by looping.
+    //while (Serial.available() > 0) {
+    //  Serial.read(); // Read and discard each byte
+    //}
+    
+  }
+
+}
+
+
+
+
+
+
+
+
+
 void setup() {
   usb_serial.begin(115200);
   //delay(50);
@@ -132,6 +162,9 @@ void loop() {
 
   //delay(50);
   
+  //run parsing routine
+  parse_serial();
+
 
   //update all pin readings as concurrently as possible
   for (auto& [key, pin] : pin_map) {
@@ -150,7 +183,7 @@ void loop() {
 
 
   //Serial.println();
-  Serial.println((String) pin_bindings[1].value + ", " + (String) pin_bindings[1].previous_value);
+  //Serial.println((String) pin_bindings[1].value + ", " + (String) pin_bindings[1].previous_value);
   //Serial.println((String) pin_bindings[0].is_pressed() + ", " + (String) pin_bindings[0].is_released(pin_bindings[0].previous_value));
   
 
@@ -208,9 +241,10 @@ void loop() {
     gamepad.rz != last_gamepad.rz or
     gamepad.rx != last_gamepad.rx or
     gamepad.ry != last_gamepad.ry
+    //TODO track down noise issues with this to avoid spam
   ) {
-    usb_hid.sendReport(GAMEPAD, &gamepad, sizeof(gamepad));
-    Serial.println("send gamepad");
+    //usb_hid.sendReport(GAMEPAD, &gamepad, sizeof(gamepad));
+    //Serial.println("send gamepad");
     //Serial.println(gamepad.x);
     //Serial.println(last_gamepad.x);
   }

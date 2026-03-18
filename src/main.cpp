@@ -16,6 +16,10 @@ const uint8_t desc_hid_report[] = {
 };
 
 //TODO figure out a nicer way to do this, to avoid repeating the pin name
+//apparently, map can be problematic for embedded uses due to dynamic memory stuff
+//so it may just be better to use an array in the same way as the pin bindings and augment arrays
+//  some extra work will need to be done in this hypothetical, to avoid needing to iterate through the entire array to find a given pin object
+// I think I've settled on std::vector for all 3 datastructures. reserve() and resize()
 //Maybe this could be fixed by mapping pins to unique identifier names, like thumb_x or index_tip
 std::map<uint, Pin> pin_map = {
   { PA_0, Pin(PA_0, true) },
@@ -39,8 +43,11 @@ std::map<uint, Pin> pin_map = {
   { PA_6, Pin(PA_6) },
 };
 
-PinMapping pin_bindings[] = {
+//Single pins can be bound to multiple inputs, because of this there is no way to reliably limit/determine the max size for this array
+#define MAX_PIN_BINDINGS 32
+PinMapping pin_bindings[MAX_PIN_BINDINGS] = {
     //thumb
+    PinMapping(PA_2, KEYBOARD, HID_KEY_1),  //click
     //TODO re-implement gamepad binding logic, as values centered at 0 don't work properly
     PinMapping(PA_1, KEYBOARD, HID_KEY_D, true, false),
     PinMapping(PA_0, KEYBOARD, HID_KEY_W, true, false),
@@ -50,25 +57,23 @@ PinMapping pin_bindings[] = {
     PinMapping(PA_1, GAMEPAD_AXIS, GAMEPAD_LEFT_STICK_X, true, false),
     PinMapping(PA_0, GAMEPAD_AXIS, GAMEPAD_LEFT_STICK_Y, true, true),
 
-    PinMapping(PA_2, KEYBOARD, HID_KEY_1),  //click
-
     //index
     PinMapping(PB_9, KEYBOARD, HID_KEY_1),  //tip
     PinMapping(PB_8, KEYBOARD, HID_KEY_R), //rest
-    //PinMapping(PB_7, KEYBOARD, HID_KEY_R),  //inner
-    //PinMapping(PB_6, GAMEPAD_BUTTON, GAMEPAD_BUTTON_B),  //pad
+    PinMapping(PB_7, KEYBOARD, HID_KEY_NONE),  //inner
+    PinMapping(PB_6, KEYBOARD, HID_KEY_NONE),  //pad
     
     //middle
     PinMapping(PB_5, KEYBOARD, HID_KEY_5), //tip
-    //PinMapping(PB_4, KEYBOARD, HID_KEY_W),  //rest
+    PinMapping(PB_4, KEYBOARD, HID_KEY_NONE),  //rest
     PinMapping(PB_3, KEYBOARD, HID_KEY_B),  //inner
-    //PinMapping(PA_15, KEYBOARD, HID_KEY_X),  //pad
+    PinMapping(PA_15, KEYBOARD, HID_KEY_NONE),  //pad
     
     //ring
     PinMapping(PA_10, KEYBOARD, HID_KEY_E),  //tip
-    //qPinMapping(PA_9, KEYBOARD, HID_KEY_A),  //rest
-    //PinMapping(PA_8, KEYBOARD, HID_KEY_Z),  //inner
-    //PinMapping(PB_10, KEYBOARD, HID_KEY_ALT_LEFT), //pad
+    PinMapping(PA_9, KEYBOARD, HID_KEY_NONE),  //rest
+    PinMapping(PA_8, KEYBOARD, HID_KEY_NONE),  //inner
+    PinMapping(PB_10, KEYBOARD, HID_KEY_NONE), //pad
     
     //pinky
     PinMapping(PB_1, KEYBOARD, HID_KEY_G), //tip
@@ -77,7 +82,8 @@ PinMapping pin_bindings[] = {
     PinMapping(PA_6, KEYBOARD, HID_KEY_CONTROL_LEFT),  //pad
 };
 
-InputAugmentation augmentations[] = {
+#define MAX_AUGMENTS 8
+InputAugmentation augmentations[MAX_AUGMENTS] = {
   //TODO this needs to be fixed. Currently causes nkro reports to spam like crazy
   //I think it may be better to modify the Pin value directly, instead of modifying the pin mapping's value
   InputAugmentation::rotation(&pin_map[PA_0], &pin_map[PA_1], radians(-0.0f)),
@@ -94,27 +100,112 @@ Adafruit_USBD_HID usb_hid;
 
 
 
+const std::vector<String> split_string(String input, char delimiter = ' ') {
+  std::vector<String> parameters = {};
+  int last_index = 0;
+  int index = 0;
+  while(index != -1) {
+    index = input.indexOf(delimiter, last_index);
 
+    parameters.push_back(input.substring(last_index, index != -1 ? index : input.length()));
 
+    last_index = index + 1;
+  }
+  return parameters;
+}
 
+enum Commands{
+  InputMapping,
+  PinDeclaration,
+  Augmentation,
+  ClearMap,
+  ClearPin,
+  ClearAugments,
+};
 
+void parse_line() {
+  //read one line of incoming serial
+  String input = Serial.readStringUntil('\n');
+  if(input.length() < 3) return;
 
-void parse_serial() {
-  if (Serial.available() > 0) {
-    // read the incoming byte:
-    int incomingByte = Serial.read();
+  String command_string = input.substring(0, 3);
+  int command = -1;
 
-    // say what you got:
-    Serial.print("Byte received: ");
-    Serial.println(incomingByte, DEC);
-
-    //if first few bytes aren't a recognized command, empty the buffer completely by looping.
-    //while (Serial.available() > 0) {
-    //  Serial.read(); // Read and discard each byte
-    //}
-    
+  //TODO should these commands, map, pin, aug, also have a parameter for create/edit/remove?
+  if (command_string.equals("map")) { //this refers to pin bindings. TODO sort out verbiage
+    Serial.println("Received command to set mapping");
+    command = InputMapping;
+  } else if (command_string.equals("pin")) { //this refers to the pin map/pin declarations
+    Serial.println("Received command to set pin declarations");
+    command = PinDeclaration;
+  } else if (command_string.equals("aug")) { //this refers to input augmentations
+    Serial.println("Received command to set augmentation");
+    command = Augmentation;
+  } else if (command_string.equals("clm")) { //this refers to input augmentations
+    Serial.println("Received command to clear mapping");
+    command = ClearMap;
+  } else if (command_string.equals("clp")) { //this refers to input augmentations
+    Serial.println("Received command to clear pin declarations");
+    command = ClearPin;
+  } else if (command_string.equals("cla")) { //this refers to input augmentations
+    Serial.println("Received command to clear augmentations");
+    command = ClearAugments;
   }
 
+  if (command == -1) return; //no command parsed
+
+  //split input into arguments, delimited by space
+  std::vector<String> arguments = split_string(input);
+  
+  switch (command)
+  {
+  case InputMapping:
+    if (arguments.size() != 6) {
+      Serial.println("Wrong number of arguments supplied for command");
+      return;
+    }
+    
+    //expected command syntax: map 2 1 30 0 0
+    // command, pin number, input device, input id, analog, invert
+    pin_bindings[0] = PinMapping((PinName) arguments[1].toInt(), arguments[2].toInt(), arguments[3].toInt(), arguments[4].toInt(), arguments[5].toInt());
+    Serial.println("Pin number: " + (String) (PinName) arguments[1].toInt() + " Input device: " + (String) arguments[2].toInt() + " Input id: " + (String) arguments[3].toInt() + " Analog: " + (String) arguments[4].toInt() + " Inverted: " + (String) arguments[5].toInt());
+    break;
+  case PinDeclaration:
+    if (arguments.size() != 4) {
+      Serial.println("Wrong number of arguments supplied for command");
+      return;
+    }
+    //expected command syntax pin 2 0 1
+    //pin, analog, inactive_value)
+    pin_map[arguments[1].toInt()] = Pin((PinName) arguments[1].toInt(), (bool) arguments[2].toInt(), arguments[3].toInt());
+    break;
+  case Augmentation:
+    /* code */
+    //TODO
+    break;
+  case ClearMap:
+    //clear mappings
+    for (auto &item : pin_bindings) {
+      item = {};
+    }
+    break;
+  case ClearPin:
+    //clear pin declarations
+    pin_map.clear();
+    break;
+  case ClearAugments:
+    //clear augments
+    for (auto &item : augmentations) {
+      item = {};
+    }
+    break;
+  }
+}
+
+void parse_serial() {
+  while (Serial.available()) {
+    parse_line();
+  }
 }
 
 
@@ -127,6 +218,7 @@ void parse_serial() {
 
 void setup() {
   usb_serial.begin(115200);
+  usb_serial.setTimeout(100); //timeout after 0.1 seconds
   //delay(50);
   
   //HID setup  

@@ -3,7 +3,7 @@
 hid_mouse_report_t mouse;
 hid_gamepad_report_t gamepad;
 
-const uint8_t handleMouseButtons(PinMapping &pin_mapping) {
+const u_int8_t handleMouseButtons(PinMapping &pin_mapping) {
   //if the input_id is a normal mouse button, and the button is pressed, return it's corresponding bit
   return (pin_mapping.is_pressed() and pin_mapping.input_id <= MOUSE_BUTTON_FORWARD) ? pin_mapping.input_id : 0;
 }
@@ -70,11 +70,11 @@ const int8_t handleMousePan(PinMapping &pin_mapping) {
   }
 }
 
-const uint32_t handleGamepadButtons(PinMapping &pin_mapping) {
+const u_int32_t handleGamepadButtons(PinMapping &pin_mapping) {
   return (pin_mapping.is_pressed()) ? (uint32_t) pin_mapping.input_id : 0;
 }
 
-const uint8_t handleGamepadHat(PinMapping &pin_mapping) {
+const u_int8_t handleGamepadHat(PinMapping &pin_mapping) {
   return (pin_mapping.is_pressed()) ? pin_mapping.input_id : GAMEPAD_HAT_CENTERED;
 }
 

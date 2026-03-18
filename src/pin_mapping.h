@@ -9,11 +9,11 @@ struct PinMapping {
   PinName pin_name = NC;
   Pin* pin = nullptr;
   int input_type = 0;
-  uint16_t input_id = 0;
+  u_int16_t input_id = 0;
 
   int value = 0;
   int previous_value = 0;
-  uint last_change_time = -DEBOUNCE_TICKS_MS;
+  u_int last_change_time = -DEBOUNCE_TICKS_MS;
 
   bool analog = false;
   bool invert = false;
@@ -34,7 +34,7 @@ struct PinMapping {
   PinMapping(
       PinName pin = NC,
       int type = 0,
-      uint16_t id = 0,
+      u_int16_t id = 0,
       bool isAnalog = false,
       bool isInverted = false,
       bool quickRelease = false,

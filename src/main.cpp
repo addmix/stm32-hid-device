@@ -15,11 +15,7 @@ const uint8_t desc_hid_report[] = {
   //TUD_HID_REPORT_DESC_CONSUMER      (HID_REPORT_ID(CONSUMER_CONTROL)),
 };
 
-//TODO figure out a nicer way to do this, to avoid repeating the pin name
-//apparently, map can be problematic for embedded uses due to dynamic memory stuff
-//so it may just be better to use an array in the same way as the pin bindings and augment arrays
-//  some extra work will need to be done in this hypothetical, to avoid needing to iterate through the entire array to find a given pin object
-// I think I've settled on std::vector for all 3 datastructures. reserve() and resize()
+//TODO replace with std::vector. reserve() and resize()
 //Maybe this could be fixed by mapping pins to unique identifier names, like thumb_x or index_tip
 std::map<uint, Pin> pin_map = {
   { PA_0, Pin(PA_0, true) },
@@ -43,11 +39,16 @@ std::map<uint, Pin> pin_map = {
   { PA_6, Pin(PA_6) },
 };
 
-//Single pins can be bound to multiple inputs, because of this there is no way to reliably limit/determine the max size for this array
-#define MAX_PIN_BINDINGS 32
-PinMapping pin_bindings[MAX_PIN_BINDINGS] = {
+//eh, low priority, as I think that typically Macros are abused to get an unfair advantage instead of being useful toons 99% of the time
+//anyways, normal hotkeys can be done by binding multiple keys to a single pin
+//Consider different config structures for input mappings, to accommodate things like macros
+std::vector<PinMapping> pin_bindings = {
     //thumb
-    PinMapping(PA_2, KEYBOARD, HID_KEY_1),  //click
+    PinMapping(PA_2, KEYBOARD, HID_KEY_CONTROL_LEFT),  //click
+    PinMapping(PA_2, KEYBOARD, HID_KEY_ALT_LEFT),  //click
+    PinMapping(PA_2, KEYBOARD, HID_KEY_M),  //click
+    
+    
     //TODO re-implement gamepad binding logic, as values centered at 0 don't work properly
     PinMapping(PA_1, KEYBOARD, HID_KEY_D, true, false),
     PinMapping(PA_0, KEYBOARD, HID_KEY_W, true, false),
@@ -82,13 +83,9 @@ PinMapping pin_bindings[MAX_PIN_BINDINGS] = {
     PinMapping(PA_6, KEYBOARD, HID_KEY_CONTROL_LEFT),  //pad
 };
 
-#define MAX_AUGMENTS 8
-InputAugmentation augmentations[MAX_AUGMENTS] = {
-  //TODO this needs to be fixed. Currently causes nkro reports to spam like crazy
-  //I think it may be better to modify the Pin value directly, instead of modifying the pin mapping's value
+std::vector<InputAugmentation> augmentations = {
   InputAugmentation::rotation(&pin_map[PA_0], &pin_map[PA_1], radians(-0.0f)),
   InputAugmentation::rotation(&pin_map[PA_1], &pin_map[PA_0], radians(-0.0f)),
-  //InputAugmentation::rotation(&pin_bindings[2], &pin_bindings[3], radians(90.0f)),
 };
 
 
@@ -157,6 +154,7 @@ void parse_line() {
   //split input into arguments, delimited by space
   std::vector<String> arguments = split_string(input);
   
+  //TODO instead of using text for this, configs could be sent directly in byte format to avoid serial > string > typecast complexity.
   switch (command)
   {
   case InputMapping:
@@ -175,9 +173,10 @@ void parse_line() {
       Serial.println("Wrong number of arguments supplied for command");
       return;
     }
-    //expected command syntax pin 2 0 1
-    //pin, analog, inactive_value)
-    pin_map[arguments[1].toInt()] = Pin((PinName) arguments[1].toInt(), (bool) arguments[2].toInt(), arguments[3].toInt());
+    //only for digital pins atm
+    //expected command syntax pin 2 1
+    //pin, inactive_value)
+    pin_map[arguments[1].toInt()] = Pin((PinName) arguments[1].toInt(), arguments[3].toInt());
     break;
   case Augmentation:
     /* code */
@@ -185,9 +184,9 @@ void parse_line() {
     break;
   case ClearMap:
     //clear mappings
-    for (auto &item : pin_bindings) {
-      item = {};
-    }
+    pin_bindings.clear();
+    //not sure if I should actually deallocate memory, so i'll keep it simple for now.
+    //pin_bindings.shrink_to_fit();
     break;
   case ClearPin:
     //clear pin declarations
@@ -195,9 +194,9 @@ void parse_line() {
     break;
   case ClearAugments:
     //clear augments
-    for (auto &item : augmentations) {
-      item = {};
-    }
+    augmentations.clear();
+    //not sure if I should actually deallocate memory, so i'll keep it simple for now.
+    //augmentations.shrink_to_fit();
     break;
   }
 }
@@ -252,11 +251,15 @@ void loop() {
     return;
   }
 
-  //delay(50);
+  delay(50);
   
   //run parsing routine
   parse_serial();
 
+
+  //TODO
+  //TODO Change this to a queue/buffer based implementation
+  //TODO
 
   //update all pin readings as concurrently as possible
   for (auto& [key, pin] : pin_map) {
@@ -273,7 +276,22 @@ void loop() {
     binding.update_value();
   }
 
+  //Serial.println(pin_bindings[0].is_just_pressed());
+  //Serial.println(pin_bindings[1].is_just_pressed());
+  //Serial.println(pin_bindings[2].is_just_pressed());
 
+
+  
+  //Serial.print("M:");
+  //Serial.print(nkro_report[HID_KEY_M / 8] & (1 << (HID_KEY_M % 8)));
+//
+  //Serial.print(" CTRL:");
+  //Serial.print(nkro_modifiers & 0x02);
+//
+  //Serial.print(" SHIFT:");
+  //Serial.println(nkro_modifiers & 0x01);
+  
+  
   //Serial.println();
   //Serial.println((String) pin_bindings[1].value + ", " + (String) pin_bindings[1].previous_value);
   //Serial.println((String) pin_bindings[0].is_pressed() + ", " + (String) pin_bindings[0].is_released(pin_bindings[0].previous_value));
@@ -290,29 +308,30 @@ void loop() {
   memset(&gamepad, 0, sizeof(gamepad));
   gamepad.hat = GAMEPAD_HAT_CENTERED;
 
-  for (PinMapping &pin_bindingsping : pin_bindings) {
-    switch (pin_bindingsping.input_type) {
+  for (PinMapping &pin_binding : pin_bindings) {
+    switch (pin_binding.input_type) {
       case KEYBOARD:
-        nkro_updated = nkro_updated or handleKeyboardNKRO(pin_bindingsping);
+        //TODO remove this "nkro_updated" logic, and just check if the report is different at the end of the iteration
+        nkro_updated = handleKeyboardNKRO(pin_binding) or nkro_updated; //this ordering is necessary to prevent nkro_updated from short-circuiting and preventing the function call
         break;
       case MOUSE:
       //TODO: Simplify this to be more like the gamepad axis handler
-        mouse.buttons |= handleMouseButtons(pin_bindingsping);
-        mouse.x += handleMouseMovementX(pin_bindingsping);
-        mouse.y += handleMouseMovementY(pin_bindingsping);
-        mouse.wheel += handleMouseScroll(pin_bindingsping);
-        mouse.pan += handleMousePan(pin_bindingsping);
+        mouse.buttons |= handleMouseButtons(pin_binding);
+        mouse.x += handleMouseMovementX(pin_binding);
+        mouse.y += handleMouseMovementY(pin_binding);
+        mouse.wheel += handleMouseScroll(pin_binding);
+        mouse.pan += handleMousePan(pin_binding);
         break;
       case GAMEPAD_BUTTON:
       //TODO: Simplify this to be more like the gamepad axis handler
-        gamepad.buttons |= handleGamepadButtons(pin_bindingsping);
+        gamepad.buttons |= handleGamepadButtons(pin_binding);
         break;
       case GAMEPAD_HAT:
       //TODO: Simplify this to be more like the gamepad axis handler
-        gamepad.hat = handleGamepadHat(pin_bindingsping);
+        gamepad.hat = handleGamepadHat(pin_binding);
         break;
       case GAMEPAD_AXIS:
-        handleGamepadAxis(pin_bindingsping); //I think this might be a better convention than the previous ones. It will be easier to separate out into multiple files if needed
+        handleGamepadAxis(pin_binding); //I think this might be a better convention than the previous ones. It will be easier to separate out into multiple files if needed
         break;
       //case RID_CONSUMER_CONTROL:
         //usb_hid.sendReport16(RID_CONSUMER_CONTROL, HID_USAGE_CONSUMER_VOLUME_DECREMENT);
@@ -322,6 +341,17 @@ void loop() {
 
   if (nkro_updated) {
     //TODO fix the reporting logic for this, possibly even look into a queue system 
+    
+    
+    //Serial.print("mods: ");
+    //Serial.println(nkro_modifiers, BIN);
+//
+    //for (int i = 0; i < NKRO_BYTES; i++) {
+    //  Serial.print((String) nkro_report[i] + ", ");
+    //}
+    //Serial.println();
+
+
     NKROReport(usb_hid, KEYBOARD);
   }
   if (

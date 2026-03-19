@@ -1,8 +1,6 @@
 #pragma once
 #include <Arduino.h>
 #include "pin_declaration.h"
-
-#define DEBOUNCE_TICKS_MS 15
 //#define ADC_MAX_VALUE 1024
 
 struct PinMapping {
@@ -13,7 +11,6 @@ struct PinMapping {
 
   int value = 0;
   int previous_value = 0;
-  u_int last_change_time = -DEBOUNCE_TICKS_MS;
 
   bool analog = false;
   bool invert = false;
@@ -72,6 +69,4 @@ struct PinMapping {
   const bool is_just_pressed();
   const bool is_just_released();
   const bool is_just_changed();
-
-  const bool is_bounce();
 };

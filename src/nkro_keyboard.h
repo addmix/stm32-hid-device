@@ -10,31 +10,6 @@
 extern uint8_t nkro_report[NKRO_BYTES];
 extern uint8_t nkro_modifiers;
 
-//#define TUD_HID_REPORT_DESC_NKRO_KEYBOARD(...) \
-//  HID_USAGE_PAGE ( HID_USAGE_PAGE_DESKTOP     ),\
-//  HID_USAGE      ( HID_USAGE_DESKTOP_KEYBOARD ),\
-//  HID_COLLECTION ( HID_COLLECTION_APPLICATION ),\
-//    /* Optional Report ID or extra descriptors */ \
-//    __VA_ARGS__ \
-//    /* 8 bits Modifier Keys (Shift, Control, Alt) */ \
-//    HID_USAGE_PAGE ( HID_USAGE_PAGE_KEYBOARD )                     ,\
-//      HID_USAGE_MIN    ( 224                                    )  ,\
-//      HID_USAGE_MAX    ( 231                                    )  ,\
-//      HID_LOGICAL_MIN  ( 0                                      )  ,\
-//      HID_LOGICAL_MAX  ( 1                                      )  ,\
-//      HID_REPORT_COUNT ( 8                                      )  ,\
-//      HID_REPORT_SIZE  ( 1                                      )  ,\
-//      HID_INPUT        ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE )  ,\
-//    /* 104 keys bitmap (NKRO) */ \
-//      HID_USAGE_MIN    ( 0                                      )  ,\
-//      HID_USAGE_MAX_N  ( 103, 2                                 )  ,\
-//      HID_LOGICAL_MIN  ( 0                                      )  ,\
-//      HID_LOGICAL_MAX  ( 1                                      )  ,\
-//      HID_REPORT_COUNT ( 104                                    )  ,\
-//      HID_REPORT_SIZE  ( 1                                      )  ,\
-//      HID_INPUT        ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE )  ,\
-//  HID_COLLECTION_END
-
 #define TUD_HID_REPORT_DESC_NKRO_KEYBOARD(...) \
   HID_USAGE_PAGE ( HID_USAGE_PAGE_DESKTOP     ),\
   HID_USAGE      ( HID_USAGE_DESKTOP_KEYBOARD ),\

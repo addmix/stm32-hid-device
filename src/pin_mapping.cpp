@@ -3,7 +3,7 @@
 void PinMapping::update_value() {
     previous_value = value;
 
-    if (is_bounce() and not analog) return; //debounce implementation
+    if (pin->is_bounce() and not analog) return; //debounce implementation
 
     int new_value = read_value();
 
@@ -17,11 +17,6 @@ void PinMapping::update_value() {
         //return;
     }
     value = new_value;
-
-    //keep track of the time when the value is changed
-    if (is_just_changed()) {
-        last_change_time = millis();
-    }
 }
 
 const int PinMapping::get_value_digital() {
@@ -103,7 +98,4 @@ const bool PinMapping::is_just_released() {
 }
 const bool PinMapping::is_just_changed() {
     return is_just_pressed() or is_just_released();
-}
-const bool PinMapping::is_bounce() {
-    return (millis() - last_change_time) <= DEBOUNCE_TICKS_MS;
 }

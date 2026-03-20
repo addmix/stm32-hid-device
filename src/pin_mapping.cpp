@@ -1,19 +1,20 @@
 #include "pin_mapping.h"
 
 void PinMapping::update_value() {
+    if (pin_name != NC) this->pin = &pin_map[pin_name];
     previous_value = value;
 
-    if (pin->is_bounce() and not analog) return; //debounce implementation
+    if (pin->is_bounce() and not pin->analog) return; //debounce implementation
 
     int new_value = read_value();
 
     //apply deadzone
-    if (analog and abs(new_value) < (int) abs((float)max_report_value * deadzone_percent)) {
+    if (pin->analog and abs(new_value) < (int) abs((float)max_report_value * deadzone_percent)) {
         new_value = 0;
     }
     //TODO problem with this logic: because input augments modify the value of the pin mapping, this "change amount before update" check almost always fails.
     //prevents over-reporting of thumbstick movements as there is noise in the ADC
-    if (analog and abs(previous_value - new_value) < change_amount_before_update) {
+    if (pin->analog and abs(previous_value - new_value) < change_amount_before_update) {
         //return;
     }
     value = new_value;
@@ -57,7 +58,7 @@ const int PinMapping::get_value_analog() {
     return temp_value;
 }
 const int PinMapping::read_value() {
-    if (analog) {
+    if (pin->analog) {
         return get_value_analog();
     }
 
@@ -72,7 +73,7 @@ const bool PinMapping::is_pressed() {
     return is_pressed(value);
 }
 const bool PinMapping::is_pressed(int test_value) {
-    if (analog) {
+    if (pin->analog) {
         //TODO implement quick-release here
         return test_value >= activation_value;
     }
@@ -83,7 +84,7 @@ const bool PinMapping::is_released() {
     return is_released(value);
 }
 const bool PinMapping::is_released(int test_value) {
-    if (analog) {
+    if (pin->analog) {
         return not is_pressed(test_value);
     }
 

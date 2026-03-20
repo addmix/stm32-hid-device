@@ -8,15 +8,15 @@ enum AugmentType{
 };
 
 struct InputAugmentation {
-    Pin* pin = nullptr;
-    Pin* secondary_pin = nullptr;
+    PinName pin = NC;
+    PinName secondary_pin = NC;
 
     AugmentType type = NONE;
     float control_rotation = 0.0;
 
     InputAugmentation() = default;
 
-    static InputAugmentation rotation(Pin* primary_pin, Pin* secondary_pin, float rotation) {
+    static InputAugmentation rotation(PinName primary_pin, PinName secondary_pin, float rotation) {
         InputAugmentation aug = InputAugmentation();
         
         aug.pin = primary_pin;
@@ -32,16 +32,16 @@ struct InputAugmentation {
     void apply_augmentations() {
         switch (type) {
         case ROTATION:
-            //check that both pin mappings are valid, and are not equal
-            if (pin == nullptr or secondary_pin == nullptr) break;
+            //check that both pin mappings are valid
+            if (pin == NC or secondary_pin == NC) break;
 
             
             //apply rotation to both pins simultaneously
             //TODO change this, I don't really like how centering is done at this step
-            Vector2 rotated_input = Vector2((float) pin->value, (float) secondary_pin->value).rotate(control_rotation);
+            Vector2 rotated_input = Vector2((float) pin_map[pin].value, (float) pin_map[secondary_pin].value).rotate(control_rotation);
             //Serial.println((String) pin_mapping->value + ", " + (String) secondary_pin_mapping->value + "\t\t" + (String) rotated_input.x + ", " + (String) rotated_input.y);
 
-            pin->value = rotated_input.x;
+            pin_map[pin].value = rotated_input.x;
             //secondary_pin->value = rotated_input.y;
 
             break;

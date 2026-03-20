@@ -3,3 +3,4 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+godot_project/addons/gdserial/bin/windows-x86_64/~gdserial.dll

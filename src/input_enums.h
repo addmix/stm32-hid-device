@@ -9,7 +9,7 @@ enum {
   GAMEPAD_BUTTON,
   GAMEPAD_HAT,
   GAMEPAD_AXIS,
-  CONSUMER_CONTROL, // Media, volume etc ..
+  //CONSUMER_CONTROL, // Media, volume etc ..
   
 };
 
@@ -19,11 +19,12 @@ enum {
   GAMEPAD_LEFT_TRIGGER,
   GAMEPAD_RIGHT_STICK_X,
   GAMEPAD_RIGHT_STICK_Y,
-  GAMEPAD_RIGHT_TRIGGER
+  GAMEPAD_RIGHT_TRIGGER,
 };
 
 //custom addition to match existing MOUSE_BUTTON_* enums
 enum {
+  
   MOUSE_SCROLL_UP     = TU_BIT(5),
   MOUSE_SCROLL_DOWN   = TU_BIT(6),
   MOUSE_SCROLL_LEFT   = TU_BIT(7),

@@ -37,7 +37,6 @@ void NKROReport(Adafruit_USBD_HID& usb_hid, u_int8_t report_id) {
   report[0] = nkro_modifiers;
   memcpy(report + 1, nkro_report, NKRO_BYTES);
   usb_hid.sendReport(report_id, report, sizeof(report));
-  Serial.println("send nkro");
 }
 
 bool handleKeyboardNKRO(PinMapping &pin_mapping) {

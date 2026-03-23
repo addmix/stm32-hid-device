@@ -6,6 +6,7 @@
 
 enum Commands{
     Reset,
+    TextCommand,
     ListConfigs,
     ListPins,
     ListMappings,
@@ -100,20 +101,18 @@ void parse_line() {
     switch (command) {
         case Reset: {
             Serial.println("Reset");
-            void(* resetFunc) (void) = 0; // Declare reset function at address 0
-            // ...
-            resetFunc(); // Call to reset the board   
-            break;
+            Serial.flush();
+            NVIC_SystemReset();
         }
         case ListConfigs: {
             
             Serial.println("Pins:");
             print_pins();
 
-            Serial.println("Mappings");
+            Serial.println("Mappings:");
             print_mappings();
 
-            Serial.println("Augments");
+            Serial.println("Augments:");
             print_augments();
 
             break;
@@ -140,13 +139,9 @@ void parse_line() {
             break;
         }
         case ClearConfig: {
-            pin_map.clear();
-            pin_bindings.clear();
-            //not sure if I should actually deallocate memory, so i'll keep it simple for now.
-            //pin_bindings.shrink_to_fit();
-            augmentations.clear();
-            //not sure if I should actually deallocate memory, so i'll keep it simple for now.
-            //augmentations.shrink_to_fit();
+            clear_pin();
+            clear_mapping();
+            clear_augment();
             Serial.println("Configs cleared");
             break;
         }
@@ -196,6 +191,7 @@ void parse_line() {
             bool invert = payload_buffer[message_index + 3];
             message_index += 4; //increase the message index for the 5 bytes that we just consumed
             
+            //for some reason, when added at runtime, this new pinmapping doesn't work.
             pin_bindings.push_back(PinMapping(pin, input_device, input_id, invert));
             Serial.println("Added new mapping: pin number=" + (String) pin + " input device=" + (String) input_device + " input id=" + (String) input_id + " inverted=" + (String) invert);
             break;
@@ -214,39 +210,43 @@ void parse_line() {
 
 
 
-//TODO. When a pin is deleted, it leaves dangling pointers in Mappings and Augments
 void clear_pin(u_int8_t index) {
     if (index == 255) {
         pin_map.clear();
+        return;
     }
 
-    if (index >= 0 and index < pin_map.size()) {
-        pin_map.erase(index);
+    auto it = pin_map.find(index);
+
+    if (it == pin_map.end()) {
+        Serial.println("Pin not found: pin=" + (String) index);
+        return;
     }
+
+    pin_map.erase(index);
 }
 void clear_mapping(u_int8_t index) {
     if (index == 255) {
         pin_bindings.clear();
+        return;
     }
 
     if (index >= 0 and index < pin_bindings.size()) {
         pin_bindings.erase(pin_bindings.begin() + index);
+        //pin_bindings.shrink_to_fit();
     }
 }
 void clear_augment(u_int8_t index) {
     if (index == 255) {
         augmentations.clear();
+        return;
     }
 
     if (index >= 0 and index < augmentations.size()) {
         augmentations.erase(augmentations.begin() + index);
+        augmentations.shrink_to_fit();
     }
 }
-
-
-
-
-
 
 
 
@@ -256,30 +256,19 @@ void print_pins(u_int8_t index) {
         return;
     }
 
-    for (size_t pin_index = 0; pin_index < pin_map.size(); ++pin_index) {
+    for (const auto& [pin_index, pin] : pin_map) {
         print_pin((u_int8_t) pin_index);
     }
 }
 void print_pin(u_int8_t index) {
-    if (index > pin_map.size()) {
-        Serial.println("Pin index out of range: index=" + (String) index);
-        return;
-    }
-    Pin& pin = pin_map[index];
-    //TODO: figure out why sometimes pins print pin_name as NC (really large number)
-    //TODO
-    //TODO
-    //TODO replace all pin_map[index] and similar calls with pin_map.find(index)
-    //TODO
-    /*
     auto it = pin_map.find(index);
     if (it == pin_map.end()) {
-        Serial.println("Pin not found");
+        Serial.println("Pin not found: pin=" + (String) index);
         return;
     }
+
     Pin& pin = it->second;
-    */
-    //TODO
+
     Serial.println((String) index + 
     ": pin number=" + (String) pin.pin_name + 
     " analog=" + (String) pin.analog 

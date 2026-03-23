@@ -35,13 +35,14 @@ struct InputAugmentation {
             //check that both pin mappings are valid
             if (pin == NC or secondary_pin == NC) break;
 
+            auto pin_obj = pin_map.find(pin)->second;
+            auto secondary_pin_obj = pin_map.find(secondary_pin)->second;
             
             //apply rotation to both pins simultaneously
-            //TODO change this, I don't really like how centering is done at this step
-            Vector2 rotated_input = Vector2((float) pin_map[pin].value, (float) pin_map[secondary_pin].value).rotate(control_rotation);
-            //Serial.println((String) pin_mapping->value + ", " + (String) secondary_pin_mapping->value + "\t\t" + (String) rotated_input.x + ", " + (String) rotated_input.y);
+            Vector2 rotated_input = Vector2((float) pin_obj.value, (float) secondary_pin_obj.value).rotate(control_rotation);
 
-            pin_map[pin].value = rotated_input.x;
+            pin_obj.value = rotated_input.x;
+            //we intentionally do not apply rotation to the secondary axis to allow separate rotation amounts
             //secondary_pin->value = rotated_input.y;
 
             break;

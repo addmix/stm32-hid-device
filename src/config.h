@@ -37,8 +37,7 @@ std::vector<PinMapping> pin_bindings = {
     PinMapping(PA_2, KEYBOARD, HID_KEY_ALT_LEFT),  //click
     PinMapping(PA_2, KEYBOARD, HID_KEY_M),  //click
     
-    
-    //TODO re-implement gamepad binding logic, as values centered at 0 don't work properly
+    //thumbstick
     PinMapping(PA_1, KEYBOARD, HID_KEY_D, false),
     PinMapping(PA_0, KEYBOARD, HID_KEY_W, false),
     PinMapping(PA_1, KEYBOARD, HID_KEY_A, true),  //y (+3.3v up)

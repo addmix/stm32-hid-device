@@ -24,3 +24,6 @@ static func create_command(command : int, data : Array = []) -> PackedByteArray:
 	byte_array.append(checksum)
 	
 	return byte_array
+
+static func receive_command(data : PackedByteArray) -> void:
+	pass #TODO

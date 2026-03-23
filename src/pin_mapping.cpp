@@ -1,7 +1,14 @@
 #include "pin_mapping.h"
 
 void PinMapping::update_value() {
-    if (pin_name != NC) this->pin = &pin_map[pin_name];
+    if (pin_map.find(pin_name) == pin_map.end()) {
+        //pin not in pin map
+        //maybe error, idk
+        value = 0;
+        return;
+    }
+
+    if (pin_name != NC) pin = &pin_map.find(pin_name)->second;
     previous_value = value;
 
     if (pin->is_bounce() and not pin->analog) return; //debounce implementation
@@ -12,16 +19,17 @@ void PinMapping::update_value() {
     if (pin->analog and abs(new_value) < (int) abs((float)max_report_value * deadzone_percent)) {
         new_value = 0;
     }
-    //TODO problem with this logic: because input augments modify the value of the pin mapping, this "change amount before update" check almost always fails.
+    
     //prevents over-reporting of thumbstick movements as there is noise in the ADC
     if (pin->analog and abs(previous_value - new_value) < change_amount_before_update) {
-        //return;
+        return;
     }
     value = new_value;
+    //Serial.println("Updated");
 }
 
 const int PinMapping::get_value_digital() {
-    bool is_activated = pin_map[pin_name].value != pin_map[pin_name].inactive_value;
+    bool is_activated = pin->value != pin->inactive_value;
 
     int temp_value = (int) is_activated;
 
@@ -40,12 +48,13 @@ const int PinMapping::get_value_digital() {
 }
 
 const int PinMapping::get_value_analog() {
-    int temp_value = pin_map[pin_name].value;
-
-    //center the ADC value to 0
-    //commented out because the pin declaration will handle centering
-    //temp_value = temp_value - center;
-
+    if (pin_map.find(pin_name) == pin_map.end()) {
+        //pin not in pin map
+        //maybe error, idk
+        return 0;
+    }
+    int temp_value = pin->value;
+    
     //apply scaling
     temp_value = (int) (temp_value * scale);
 
@@ -78,7 +87,7 @@ const bool PinMapping::is_pressed(int test_value) {
         return test_value >= activation_value;
     }
 
-    return test_value != 0;//TODO: change this to have scaling compatibility
+    return test_value != 0;
 }
 const bool PinMapping::is_released() {
     return is_released(value);
@@ -88,9 +97,10 @@ const bool PinMapping::is_released(int test_value) {
         return not is_pressed(test_value);
     }
 
-    return test_value == 0;//TODO: change this to have scaling compatibility
+    return test_value == 0;
 }
 const bool PinMapping::is_just_pressed() {
+    //TODO - something causes is_just_pressed() to be true when pin mappings are deleted.
     return is_pressed() and is_released(previous_value); //TODO maybe add a third condition that the change in value has to be significant, to avoid ADC noise?
 }
 //TODO possible issues with is_just_released()

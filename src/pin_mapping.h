@@ -12,13 +12,11 @@ struct PinMapping {
   int value = 0;
   int previous_value = 0;
 
-  //bool analog = false;
   bool invert = false;
 
   int max_report_value = 256;
-  int activation_value = 50;
-  //int center = ADC_MAX_VALUE / 2; 
-  //int range = ADC_MAX_VALUE / 2;
+  int activation_value = 50; 
+  //int range = ADC_MAX_VALUE / 2; //might still be needed, haven't gotten to that step yet.
 
   float scale = (float) max_report_value / (float) ADC_MAX_VALUE + 0.05;
   float deadzone_percent = 0.05;
@@ -32,7 +30,6 @@ struct PinMapping {
       PinName pin = NC,
       int type = 0,
       u_int16_t id = 0,
-      //bool isAnalog = false,
       bool isInverted = false,
       bool quickRelease = false,
       int counterStrafeHelpTime = 0
@@ -40,7 +37,6 @@ struct PinMapping {
     : pin_name(pin), 
     input_type(type), 
     input_id(id),
-    //analog(isAnalog), 
     invert(isInverted), 
     //these are unimplemented
     quick_release(quickRelease), 
@@ -49,7 +45,7 @@ struct PinMapping {
     previous_value(0) 
     {
       //TODO add a check to make sure the selected pin is present in the pin map
-      if (pin_name != NC) this->pin = &pin_map[pin_name];
+      //if (pin_name != NC) this->pin = &pin_map[pin_name];
     }
   
 

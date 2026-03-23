@@ -2,6 +2,7 @@ class_name Enums
 
 enum Commands {
 	Reset,
+	TextCommand,
 	ListConfigs,
 	ListPins,
 	ListMappings,

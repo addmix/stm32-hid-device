@@ -28,6 +28,15 @@ func _on_pressed() -> void:
 	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.Reset))
 "
 
+[sub_resource type="GDScript" id="GDScript_lquwl"]
+script/source = "extends HBoxContainer
+
+func _on_send_command_pressed(text : String = \"\") -> void:
+	var bytes_to_send : PackedByteArray = %CommandEdit.text.c_escape().to_utf8_buffer()
+	%CommandEdit.text = \"\"
+	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.TextCommand, bytes_to_send))
+"
+
 [sub_resource type="GDScript" id="GDScript_h2yge"]
 script/source = "extends HBoxContainer
 
@@ -56,8 +65,48 @@ func _on_list_augments_button_pressed() -> void:
 	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ListAugments, [get_value()]))
 "
 
+[sub_resource type="GDScript" id="GDScript_7mycd"]
+script/source = "extends HBoxContainer
+
+
+func _on_add_pin_button_pressed() -> void:
+	#TODO do some processing on the pin number to allow plaintext pin mapping
+	var pin : int = $Pin.text.to_int()
+	var analog : bool = $Analog.button_pressed
+	
+	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.PinDeclaration, [pin, analog]))
+	
+	$Pin.text = \"\"
+	$Analog.button_pressed = false
+"
+
+[sub_resource type="GDScript" id="GDScript_272bh"]
+script/source = "extends HBoxContainer
+
+
+func _on_add_mapping_button_pressed() -> void:
+	#TODO do some processing on the pin number to allow plaintext pin mapping
+	var pin : int = $Pin.text.to_int()
+	var input_device : int = $ReportDevice.selected
+	var input_id : int = $InputID.text.to_int()
+	var inverted : bool = $Inverted.button_pressed
+	
+	#TODO add error warnings/messages for improper configuration
+	#i.e. incorrect input device selection, or input ID names
+	
+	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.InputMapping, [pin, input_device, input_id, inverted]))
+	
+	$Pin.text = \"\"
+	$ReportDevice.selected = -1
+	$InputID.text = \"\"
+	$Inverted.button_pressed = false
+"
+
 [sub_resource type="GDScript" id="GDScript_0xm2m"]
 script/source = "extends HBoxContainer
+
+func reset() -> void:
+	$Index.text = \"\"
 
 #TODO: expand this to accept human-readable pin names
 func get_value() -> int:
@@ -73,15 +122,19 @@ func get_value() -> int:
 
 func _on_delete_configs_button_pressed() -> void:
 	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ClearConfigs))
+	reset()
 
 func _on_delete_pins_button_pressed() -> void:
 	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ClearPin, [get_value()]))
+	reset()
 
 func _on_delete_mappings_button_pressed() -> void:
 	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ClearMap, [get_value()]))
+	reset()
 
 func _on_delete_augments_button_pressed() -> void:
 	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ClearAugments, [get_value()]))
+	reset()
 "
 
 [node name="Main" type="MarginContainer" unique_id=1401305772]
@@ -137,17 +190,17 @@ vertical_scroll_mode = 0
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=1947399246]
+[node name="CommandLine" type="HBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=1947399246]
 layout_mode = 2
+script = SubResource("GDScript_lquwl")
 
-[node name="CommandEdit" type="LineEdit" parent="VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer2" unique_id=730380549]
+[node name="CommandEdit" type="LineEdit" parent="VBoxContainer/ScrollContainer/VBoxContainer/CommandLine" unique_id=730380549]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = "map 2 1 30 0"
 keep_editing_on_text_submit = true
 
-[node name="SendCommand" type="Button" parent="VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer2" unique_id=2139898439]
+[node name="SendCommand" type="Button" parent="VBoxContainer/ScrollContainer/VBoxContainer/CommandLine" unique_id=2139898439]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Send"
@@ -180,6 +233,7 @@ text = "List Augments"
 
 [node name="AddPinForm" type="HBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=729845870]
 layout_mode = 2
+script = SubResource("GDScript_7mycd")
 
 [node name="AddPinButton" type="Button" parent="VBoxContainer/ScrollContainer/VBoxContainer/AddPinForm" unique_id=1009279928]
 layout_mode = 2
@@ -199,6 +253,7 @@ text = "Analog"
 
 [node name="AddMappingForm" type="HBoxContainer" parent="VBoxContainer/ScrollContainer/VBoxContainer" unique_id=250666598]
 layout_mode = 2
+script = SubResource("GDScript_272bh")
 
 [node name="AddMappingButton" type="Button" parent="VBoxContainer/ScrollContainer/VBoxContainer/AddMappingForm" unique_id=1414493048]
 layout_mode = 2
@@ -313,12 +368,14 @@ text = "Delete Augments"
 
 [connection signal="pressed" from="VBoxContainer/SerialOutput/VBoxContainer/ClearButton" to="VBoxContainer/SerialOutput/VBoxContainer/ClearButton" method="_on_pressed"]
 [connection signal="pressed" from="VBoxContainer/SerialOutput/VBoxContainer/ResetButton" to="VBoxContainer/SerialOutput/VBoxContainer/ResetButton" method="_on_pressed"]
-[connection signal="text_submitted" from="VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer2/CommandEdit" to="." method="_on_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer2/SendCommand" to="." method="_on_button_pressed"]
+[connection signal="text_submitted" from="VBoxContainer/ScrollContainer/VBoxContainer/CommandLine/CommandEdit" to="VBoxContainer/ScrollContainer/VBoxContainer/CommandLine" method="_on_send_command_pressed"]
+[connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/CommandLine/SendCommand" to="VBoxContainer/ScrollContainer/VBoxContainer/CommandLine" method="_on_send_command_pressed"]
 [connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/ListConfigs/ListConfigsButton" to="VBoxContainer/ScrollContainer/VBoxContainer/ListConfigs" method="_on_list_configs_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/ListConfigs/ListPinsButton" to="VBoxContainer/ScrollContainer/VBoxContainer/ListConfigs" method="_on_list_pins_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/ListConfigs/ListMappingsButton" to="VBoxContainer/ScrollContainer/VBoxContainer/ListConfigs" method="_on_list_mappings_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/ListConfigs/ListAugmentsButton" to="VBoxContainer/ScrollContainer/VBoxContainer/ListConfigs" method="_on_list_augments_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/AddPinForm/AddPinButton" to="VBoxContainer/ScrollContainer/VBoxContainer/AddPinForm" method="_on_add_pin_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/AddMappingForm/AddMappingButton" to="VBoxContainer/ScrollContainer/VBoxContainer/AddMappingForm" method="_on_add_mapping_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/DeleteConfigs/DeleteConfigsButton" to="VBoxContainer/ScrollContainer/VBoxContainer/DeleteConfigs" method="_on_delete_configs_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/DeleteConfigs/DeletePinsButton" to="VBoxContainer/ScrollContainer/VBoxContainer/DeleteConfigs" method="_on_delete_pins_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ScrollContainer/VBoxContainer/DeleteConfigs/DeleteMappingsButton" to="VBoxContainer/ScrollContainer/VBoxContainer/DeleteConfigs" method="_on_delete_mappings_button_pressed"]

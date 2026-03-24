@@ -1,8 +1,67 @@
 class_name Enums
 
+static func value_to_key(_enum : Dictionary, value : Variant) -> Variant:
+	var index : int = _enum.values().find(value)
+	if index == -1:
+		return null
+	
+	return _enum.keys()[index]
+
+static func text_to_index(text : String) -> int:
+	var index : int = 255
+	if text in ["", "-1"]:
+		index = 255
+	else:
+		if text.is_valid_int(): index = text.to_int() #if value isn't proper int, the default of 255 is sent
+	
+	return index
+
+static func text_to_pin(text : String) -> int:
+	if Pins.has(text):
+		return Pins.get(text)
+	
+	return text.to_int()
+
+static func pin_to_text(pin : int) -> String:
+	return value_to_key(Pins, pin)
+
+static func text_to_input_id(text : String, device_type : int = Device.KEYBOARD) -> int:
+	match device_type:
+		Device.KEYBOARD: #defaults to keyboard if no device_type is passed
+			return Keyboard.get(text)
+		Device.MOUSE:
+			return Mouse.get(text)
+		Device.GAMEPAD_BUTTON:
+			return GamepadAxis.get(text)
+		Device.GAMEPAD_HAT:
+			pass #todo
+		Device.GAMEPAD_AXIS :
+			pass #todo
+	
+	return -1
+
+static func input_id_to_text(input_id : int, device_type : int = Device.KEYBOARD) -> String:
+	match device_type:
+		Device.KEYBOARD: #defaults to keyboard if no device_type is passed
+			return value_to_key(Keyboard, input_id)
+		Device.MOUSE:
+			return value_to_key(Mouse, input_id)
+		Device.GAMEPAD_BUTTON:
+			return value_to_key(GamepadAxis, input_id)
+		Device.GAMEPAD_HAT:
+			pass #todo
+		Device.GAMEPAD_AXIS :
+			pass #todo
+	
+	return ""
+
 enum Commands {
 	Reset,
 	TextCommand,
+	GetConfigs,
+	GetPins,
+	GetMappings,
+	GetAugments,
 	ListConfigs,
 	ListPins,
 	ListMappings,
@@ -26,6 +85,82 @@ enum Device{
   GAMEPAD_AXIS, 
 }
 
+#typedef enum
+#{
+  #GAMEPAD_BUTTON_0  = TU_BIT(0),
+  #GAMEPAD_BUTTON_1  = TU_BIT(1),
+  #GAMEPAD_BUTTON_2  = TU_BIT(2),
+  #GAMEPAD_BUTTON_3  = TU_BIT(3),
+  #GAMEPAD_BUTTON_4  = TU_BIT(4),
+  #GAMEPAD_BUTTON_5  = TU_BIT(5),
+  #GAMEPAD_BUTTON_6  = TU_BIT(6),
+  #GAMEPAD_BUTTON_7  = TU_BIT(7),
+  #GAMEPAD_BUTTON_8  = TU_BIT(8),
+  #GAMEPAD_BUTTON_9  = TU_BIT(9),
+  #GAMEPAD_BUTTON_10 = TU_BIT(10),
+  #GAMEPAD_BUTTON_11 = TU_BIT(11),
+  #GAMEPAD_BUTTON_12 = TU_BIT(12),
+  #GAMEPAD_BUTTON_13 = TU_BIT(13),
+  #GAMEPAD_BUTTON_14 = TU_BIT(14),
+  #GAMEPAD_BUTTON_15 = TU_BIT(15),
+  #GAMEPAD_BUTTON_16 = TU_BIT(16),
+  #GAMEPAD_BUTTON_17 = TU_BIT(17),
+  #GAMEPAD_BUTTON_18 = TU_BIT(18),
+  #GAMEPAD_BUTTON_19 = TU_BIT(19),
+  #GAMEPAD_BUTTON_20 = TU_BIT(20),
+  #GAMEPAD_BUTTON_21 = TU_BIT(21),
+  #GAMEPAD_BUTTON_22 = TU_BIT(22),
+  #GAMEPAD_BUTTON_23 = TU_BIT(23),
+  #GAMEPAD_BUTTON_24 = TU_BIT(24),
+  #GAMEPAD_BUTTON_25 = TU_BIT(25),
+  #GAMEPAD_BUTTON_26 = TU_BIT(26),
+  #GAMEPAD_BUTTON_27 = TU_BIT(27),
+  #GAMEPAD_BUTTON_28 = TU_BIT(28),
+  #GAMEPAD_BUTTON_29 = TU_BIT(29),
+  #GAMEPAD_BUTTON_30 = TU_BIT(30),
+  #GAMEPAD_BUTTON_31 = TU_BIT(31),
+#}hid_gamepad_button_bm_t;
+#
+#/// Standard Gamepad Buttons Naming from Linux input event codes
+#/// https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h
+##define GAMEPAD_BUTTON_A       GAMEPAD_BUTTON_0
+##define GAMEPAD_BUTTON_SOUTH   GAMEPAD_BUTTON_0
+#
+##define GAMEPAD_BUTTON_B       GAMEPAD_BUTTON_1
+##define GAMEPAD_BUTTON_EAST    GAMEPAD_BUTTON_1
+#
+##define GAMEPAD_BUTTON_C       GAMEPAD_BUTTON_2
+#
+##define GAMEPAD_BUTTON_X       GAMEPAD_BUTTON_3
+##define GAMEPAD_BUTTON_NORTH   GAMEPAD_BUTTON_3
+#
+##define GAMEPAD_BUTTON_Y       GAMEPAD_BUTTON_4
+##define GAMEPAD_BUTTON_WEST    GAMEPAD_BUTTON_4
+#
+##define GAMEPAD_BUTTON_Z       GAMEPAD_BUTTON_5
+##define GAMEPAD_BUTTON_TL      GAMEPAD_BUTTON_6
+##define GAMEPAD_BUTTON_TR      GAMEPAD_BUTTON_7
+##define GAMEPAD_BUTTON_TL2     GAMEPAD_BUTTON_8
+##define GAMEPAD_BUTTON_TR2     GAMEPAD_BUTTON_9
+##define GAMEPAD_BUTTON_SELECT  GAMEPAD_BUTTON_10
+##define GAMEPAD_BUTTON_START   GAMEPAD_BUTTON_11
+##define GAMEPAD_BUTTON_MODE    GAMEPAD_BUTTON_12
+##define GAMEPAD_BUTTON_THUMBL  GAMEPAD_BUTTON_13
+##define GAMEPAD_BUTTON_THUMBR  GAMEPAD_BUTTON_14
+#
+#/// Standard Gamepad HAT/DPAD Buttons (from Linux input event codes)
+#typedef enum
+#{
+  #GAMEPAD_HAT_CENTERED   = 0,  ///< DPAD_CENTERED
+  #GAMEPAD_HAT_UP         = 1,  ///< DPAD_UP
+  #GAMEPAD_HAT_UP_RIGHT   = 2,  ///< DPAD_UP_RIGHT
+  #GAMEPAD_HAT_RIGHT      = 3,  ///< DPAD_RIGHT
+  #GAMEPAD_HAT_DOWN_RIGHT = 4,  ///< DPAD_DOWN_RIGHT
+  #GAMEPAD_HAT_DOWN       = 5,  ///< DPAD_DOWN
+  #GAMEPAD_HAT_DOWN_LEFT  = 6,  ///< DPAD_DOWN_LEFT
+  #GAMEPAD_HAT_LEFT       = 7,  ///< DPAD_LEFT
+  #GAMEPAD_HAT_UP_LEFT    = 8,  ///< DPAD_UP_LEFT
+
 enum GamepadAxis{ 
   GAMEPAD_LEFT_STICK_X,
   GAMEPAD_LEFT_STICK_Y,
@@ -35,7 +170,7 @@ enum GamepadAxis{
   GAMEPAD_RIGHT_TRIGGER,
 };
 
-enum MouseInput {
+enum Mouse {
 	MOUSE_BUTTON_LEFT     = 1 << 0,
 	MOUSE_BUTTON_RIGHT    = 1 << 1,
 	MOUSE_BUTTON_MIDDLE   = 1 << 2,
@@ -52,7 +187,7 @@ enum MouseInput {
 	MOUSE_RIGHT    = 1 << 12,
 };
 
-enum {
+enum Keyboard {
 	HID_KEY_NONE                        = 0x00,
 	HID_KEY_A                           = 0x04,
 	HID_KEY_B                           = 0x05,
@@ -271,4 +406,44 @@ enum {
 	HID_KEY_SHIFT_RIGHT                 = 0xE5,
 	HID_KEY_ALT_RIGHT                   = 0xE6,
 	HID_KEY_GUI_RIGHT                   = 0xE7,
+}
+
+
+
+enum Pins {
+	NC = 0xFFFFFFFF,
+	#bank a
+	A0  = (0 << 4) + 0x00,
+	A1  = (0 << 4) + 0x01,
+	A2  = (0 << 4) + 0x02,
+	A3  = (0 << 4) + 0x03,
+	A4  = (0 << 4) + 0x04,
+	A5  = (0 << 4) + 0x05,
+	A6  = (0 << 4) + 0x06,
+	A7  = (0 << 4) + 0x07,
+	A8  = (0 << 4) + 0x08,
+	A9  = (0 << 4) + 0x09,
+	A10 = (0 << 4) + 0x0A,
+	A11 = (0 << 4) + 0x0B,
+	A12 = (0 << 4) + 0x0C,
+	A13 = (0 << 4) + 0x0D,
+	A14 = (0 << 4) + 0x0E,
+	A15 = (0 << 4) + 0x0F,
+	#bank b
+	B0  = (1 << 4) + 0x00,
+	B1  = (1 << 4) + 0x01,
+	B2  = (1 << 4) + 0x02,
+	B3  = (1 << 4) + 0x03,
+	B4  = (1 << 4) + 0x04,
+	B5  = (1 << 4) + 0x05,
+	B6  = (1 << 4) + 0x06,
+	B7  = (1 << 4) + 0x07,
+	B8  = (1 << 4) + 0x08,
+	B9  = (1 << 4) + 0x09,
+	B10 = (1 << 4) + 0x0A,
+	B11 = (1 << 4) + 0x0B,
+	B12 = (1 << 4) + 0x0C,
+	B13 = (1 << 4) + 0x0D,
+	B14 = (1 << 4) + 0x0E,
+	B15 = (1 << 4) + 0x0F,
 }

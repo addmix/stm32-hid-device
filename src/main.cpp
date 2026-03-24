@@ -49,9 +49,7 @@ void loop() {
     //delayMicroseconds(1000);
     return;
   }
-
   //delay(50);
-  
   //run parsing routine
   parse_serial();
 
@@ -66,7 +64,6 @@ void loop() {
   }
 
   //apply input augmentations
-  //TODO this absolutely 100% must only apply to pin readings, not pin mappings
   for (auto& augment : augmentations) {
     augment.apply_augmentations();
   }
@@ -74,27 +71,6 @@ void loop() {
   for (auto& binding : pin_bindings) {
     binding.update_value();
   }
-
-  //Serial.println(pin_bindings[0].is_just_pressed());
-  //Serial.println(pin_bindings[1].is_just_pressed());
-  //Serial.println(pin_bindings[2].is_just_pressed());
-
-
-  
-  //Serial.print("M:");
-  //Serial.print(nkro_report[HID_KEY_M / 8] & (1 << (HID_KEY_M % 8)));
-//
-  //Serial.print(" CTRL:");
-  //Serial.print(nkro_modifiers & 0x02);
-//
-  //Serial.print(" SHIFT:");
-  //Serial.println(nkro_modifiers & 0x01);
-  
-  
-  //Serial.println();
-  //Serial.println((String) pin_bindings[1].value + ", " + (String) pin_bindings[1].previous_value);
-  //Serial.println((String) pin_bindings[0].is_pressed() + ", " + (String) pin_bindings[0].is_released(pin_bindings[0].previous_value));
-  
 
   bool nkro_updated = false;
 
@@ -134,7 +110,6 @@ void loop() {
         break;
       //case RID_CONSUMER_CONTROL:
         //usb_hid.sendReport16(RID_CONSUMER_CONTROL, HID_USAGE_CONSUMER_VOLUME_DECREMENT);
-        //TODO
     }
   }
 
@@ -152,7 +127,6 @@ void loop() {
     gamepad.rz != last_gamepad.rz or
     gamepad.rx != last_gamepad.rx or
     gamepad.ry != last_gamepad.ry
-    //TODO track down noise issues with this to avoid spam
   ) {
     usb_hid.sendReport(GAMEPAD, &gamepad, sizeof(gamepad));
     Serial.println("send gamepad");
@@ -169,10 +143,10 @@ void loop() {
     usb_hid.sendReport(MOUSE, &mouse, sizeof(mouse));
     Serial.println("send mouse");
   }
-  //TODO: consumer control keys
 
   //we don't need to run at full speed. My measurement showed that iterations take ~43 microseconds. This could possible help avoid USB buffer issues, though idk if that's even a problem
   delayMicroseconds(457);
+  
 }
 
 

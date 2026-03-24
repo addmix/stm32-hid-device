@@ -1,35 +1,43 @@
 #include "pin_mapping.h"
 
 void PinMapping::update_value() {
-    if (pin_map.find(pin_name) == pin_map.end()) {
-        //pin not in pin map
-        //maybe error, idk
+    if (pin_name == NC) return;
+    //TODO: make these pin_map.find(pin_name) calls less repetetive
+    auto it = pin_map.find(pin_name);
+    if (it == pin_map.end()) {
         value = 0;
         return;
     }
-
-    if (pin_name != NC) pin = &pin_map.find(pin_name)->second;
+    
+    Pin& pin = it->second;
+    
     previous_value = value;
 
-    if (pin->is_bounce() and not pin->analog) return; //debounce implementation
+    if (pin.is_bounce() and not pin.analog) return; //debounce implementation
 
     int new_value = read_value();
 
     //apply deadzone
-    if (pin->analog and abs(new_value) < (int) abs((float)max_report_value * deadzone_percent)) {
+    if (pin.analog and abs(new_value) < (int) abs((float)max_report_value * deadzone_percent)) {
         new_value = 0;
     }
     
     //prevents over-reporting of thumbstick movements as there is noise in the ADC
-    if (pin->analog and abs(previous_value - new_value) < change_amount_before_update) {
+    if (pin.analog and abs(previous_value - new_value) < change_amount_before_update) {
         return;
     }
     value = new_value;
-    //Serial.println("Updated");
 }
 
 const int PinMapping::get_value_digital() {
-    bool is_activated = pin->value != pin->inactive_value;
+    //TODO: make these pin_map.find(pin_name) calls less repetetive
+    auto it = pin_map.find(pin_name);
+    if (it == pin_map.end()) {
+        return 0;
+    }
+    Pin& pin = it->second;
+
+    bool is_activated = pin.value != pin.inactive_value;
 
     int temp_value = (int) is_activated;
 
@@ -48,12 +56,14 @@ const int PinMapping::get_value_digital() {
 }
 
 const int PinMapping::get_value_analog() {
-    if (pin_map.find(pin_name) == pin_map.end()) {
-        //pin not in pin map
-        //maybe error, idk
+    //TODO: make these pin_map.find(pin_name) calls less repetetive
+    auto it = pin_map.find(pin_name);
+    if (it == pin_map.end()) {
         return 0;
     }
-    int temp_value = pin->value;
+    Pin& pin = it->second;
+
+    int temp_value = pin.value;
     
     //apply scaling
     temp_value = (int) (temp_value * scale);
@@ -67,7 +77,14 @@ const int PinMapping::get_value_analog() {
     return temp_value;
 }
 const int PinMapping::read_value() {
-    if (pin->analog) {
+    //TODO: make these pin_map.find(pin_name) calls less repetetive
+    auto it = pin_map.find(pin_name);
+    if (it == pin_map.end()) {
+        return 0;
+    }
+    Pin& pin = it->second;
+
+    if (pin.analog) {
         return get_value_analog();
     }
 
@@ -82,7 +99,14 @@ const bool PinMapping::is_pressed() {
     return is_pressed(value);
 }
 const bool PinMapping::is_pressed(int test_value) {
-    if (pin->analog) {
+    //TODO: make these pin_map.find(pin_name) calls less repetetive
+    auto it = pin_map.find(pin_name);
+    if (it == pin_map.end()) {
+        return false;
+    }
+    Pin& pin = it->second;
+
+    if (pin.analog) {
         //TODO implement quick-release here
         return test_value >= activation_value;
     }
@@ -93,17 +117,22 @@ const bool PinMapping::is_released() {
     return is_released(value);
 }
 const bool PinMapping::is_released(int test_value) {
-    if (pin->analog) {
+    //TODO: make these pin_map.find(pin_name) calls less repetetive
+    auto it = pin_map.find(pin_name);
+    if (it == pin_map.end()) {
+        return false;
+    }
+    Pin& pin = it->second;
+
+    if (pin.analog) {
         return not is_pressed(test_value);
     }
 
     return test_value == 0;
 }
 const bool PinMapping::is_just_pressed() {
-    //TODO - something causes is_just_pressed() to be true when pin mappings are deleted.
-    return is_pressed() and is_released(previous_value); //TODO maybe add a third condition that the change in value has to be significant, to avoid ADC noise?
+    return is_pressed() and is_released(previous_value);
 }
-//TODO possible issues with is_just_released()
 const bool PinMapping::is_just_released() {
     return is_released() and is_pressed(previous_value);
 }

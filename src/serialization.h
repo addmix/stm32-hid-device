@@ -7,6 +7,10 @@
 enum Commands{
     Reset,
     TextCommand,
+    GetConfigs,
+    GetPins,
+    GetMappings,
+    GetAugments,
     ListConfigs,
     ListPins,
     ListMappings,
@@ -24,18 +28,22 @@ enum Commands{
 void parse_serial();
 void parse_line();
 
-void clear_pin(u_int8_t index = 255);
-void clear_mapping(u_int8_t index = 255);
-void clear_augment(u_int8_t index = 255);
-
+void get_pins(u_int8_t index = 255);
+void get_pin(u_int8_t index);
+void get_mappings(u_int8_t index = 255);
+void get_mapping(u_int8_t index);
+void get_augments(u_int8_t index = 255);
+void get_augment(u_int8_t index);
 void print_pins(u_int8_t index = 255);
 void print_pin(u_int8_t index);
 void print_mappings(u_int8_t index = 255);
 void print_mapping(u_int8_t index);
 void print_augments(u_int8_t index = 255);
 void print_augment(u_int8_t index);
+void clear_pin(u_int8_t index = 255);
+void clear_mapping(u_int8_t index = 255);
+void clear_augment(u_int8_t index = 255);
 
-//TODO - this should be calculated based off of the start code and message length bytes
 //2 bytes for start code, 2 bytes for payload length, >=1 byte for payload, and 1 byte for checksum
 #define MINIMUM_MESSAGE_LENGTH 3
 void parse_serial() {
@@ -45,7 +53,27 @@ void parse_serial() {
     }
 }
 
-void parse_line() {
+//TODO: Verify that this actually works
+void create_command(uint8_t *buffer, uint8_t *data, size_t length) {
+    buffer[0] = 0xFF;
+    buffer[1] = 0x00;
+    
+    //2 byte payload length
+    buffer[2] = length >> 8 & 0xFF; //the bitwise and here may be redundant, because the buffer can only store uint8 anyways.
+    buffer[3] = length & 0xFF; //the bitwise and here may be redundant, because the buffer can only store uint8 anyways.
+
+    //payload
+    uint8_t sum = 0;
+    for (size_t i = 0; i < length; ++i) {
+        buffer[i + 4] = data[i];
+        //checksum
+        sum += data[i];
+    }
+    buffer[length + 4] = sum;
+}
+
+
+void parse_line() {//receive command
     //first two byes are the start code
     char first_byte = Serial.read();
     char second_byte = Serial.read();
@@ -59,8 +87,14 @@ void parse_line() {
         Serial.println("First bytes were not start code. Aborting.");
         return;
     }
-     
+    #define MAX_PAYLOAD_BUFFER_SIZE 512
     u_int16_t payload_size = (static_cast<u_int16_t>((u_int8_t) Serial.read()) << 8) | static_cast<u_int16_t>((u_int8_t) Serial.read());
+    if (payload_size > MAX_PAYLOAD_BUFFER_SIZE) {
+        //If sent message is too big, abort and clear buffer
+        while(Serial.available() > 0) Serial.read();
+        return;
+    }
+    
     u_int8_t payload_buffer[payload_size];
     u_int16_t bytes_read = Serial.readBytes(payload_buffer, payload_size);
 
@@ -82,11 +116,10 @@ void parse_line() {
         return;
     }
 
-    int sum = 0;
+    uint8_t sum = 0;
     for (u_int8_t byte : payload_buffer) {
         sum += byte;
     }
-    sum = sum & 0xFF;
 
     if (checksum_value != sum) {
         Serial.println("Checksum did not match: Expected checksum=" + (String) checksum_value + " calculated checksum=" + (String) sum);
@@ -98,11 +131,59 @@ void parse_line() {
     
     u_int8_t command = payload_buffer[message_index];
     message_index += 1; //increase the message index for that first byte that we consumed
+
+
+
+
+
+
+
+
+    //TODO
+    //TODO
+    //TODO
+    //TODO
+    //TODO - Implement separate, or repurpose current printing commands to print raw data instead of formatted strings, and perform formatting in desktop app
+    //TODO
+    //TODO
+    //TODO
+    //TODO
+
+
+
+
+
+
+
     switch (command) {
         case Reset: {
             Serial.println("Reset");
             Serial.flush();
             NVIC_SystemReset();
+            break;
+        }
+        case GetConfigs: {
+            
+            //TODO
+            break;
+        }
+        case GetPins: {
+            u_int8_t index = payload_buffer[message_index];
+            message_index += 1; //increase the message index for the 1 byte that we just consumed
+            get_pins(index);
+            break;
+        }
+        case GetMappings: {
+            int index = payload_buffer[message_index];
+            message_index += 1; //increase the message index for the 1 byte that we just consumed
+            get_mappings(index);
+            break;
+        }
+        case GetAugments: {
+            int index = payload_buffer[message_index];
+            message_index += 1; //increase the message index for the 1 byte that we just consumed
+            get_augments(index);
+            break;
         }
         case ListConfigs: {
             
@@ -148,7 +229,6 @@ void parse_line() {
         case ClearPin: {
             int index = payload_buffer[message_index];
             message_index += 1; //increase the message index for the 1 byte that we just consumed
-            //TODO: Add index to clear specific item
             clear_pin(index);
             Serial.println("Pins cleared");
             break;
@@ -156,7 +236,6 @@ void parse_line() {
         case ClearMap: {
             int index = payload_buffer[message_index];
             message_index += 1; //increase the message index for the 1 byte that we just consumed
-            //TODO: Add index to clear specific item
             clear_mapping(index);
             //not sure if I should actually deallocate memory, so i'll keep it simple for now.
             //pin_bindings.shrink_to_fit();
@@ -166,7 +245,6 @@ void parse_line() {
         case ClearAugments: {
             int index = payload_buffer[message_index];
             message_index += 1; //increase the message index for the 1 byte that we just consumed
-            //TODO: Add index to clear specific item
             clear_augment(index);
             //not sure if I should actually deallocate memory, so i'll keep it simple for now.
             //augmentations.shrink_to_fit();
@@ -191,7 +269,6 @@ void parse_line() {
             bool invert = payload_buffer[message_index + 3];
             message_index += 4; //increase the message index for the 5 bytes that we just consumed
             
-            //for some reason, when added at runtime, this new pinmapping doesn't work.
             pin_bindings.push_back(PinMapping(pin, input_device, input_id, invert));
             Serial.println("Added new mapping: pin number=" + (String) pin + " input device=" + (String) input_device + " input id=" + (String) input_id + " inverted=" + (String) invert);
             break;
@@ -209,46 +286,105 @@ void parse_line() {
 
 
 
+//response command format:
+// 2 bytes start code
+// 2 bytes payload length
 
-void clear_pin(u_int8_t index) {
-    if (index == 255) {
-        pin_map.clear();
+//payload
+//command that is being responded to
+//section type (PinDeclaration, InputMapping, Augmentation)
+//section length (total bytes)
+//section type (PinDeclaration, InputMapping, Augmentation)
+//section length (total bytes)
+//etc...
+
+// 1 byte checksum
+
+void get_pins(u_int8_t index) {
+    if (index != 255) {
+        
+        get_pin(index);
         return;
     }
 
+    for (const auto& [pin_index, pin] : pin_map) {
+        get_pin((u_int8_t) pin_index);
+    }
+}
+void get_pin(u_int8_t index) {
     auto it = pin_map.find(index);
-
     if (it == pin_map.end()) {
         Serial.println("Pin not found: pin=" + (String) index);
         return;
     }
 
-    pin_map.erase(index);
+    Pin& pin = it->second;
+
+    //TODO
+    //Serial.println((String) index + 
+    //": pin number=" + (String) pin.pin_name + 
+    //" analog=" + (String) pin.analog 
+    //);
 }
-void clear_mapping(u_int8_t index) {
-    if (index == 255) {
-        pin_bindings.clear();
+
+void get_mappings(u_int8_t index) {
+    if (index != 255) {
+        get_mapping(index);
         return;
     }
 
-    if (index >= 0 and index < pin_bindings.size()) {
-        pin_bindings.erase(pin_bindings.begin() + index);
-        //pin_bindings.shrink_to_fit();
+    for (size_t mapping_index = 0; mapping_index < pin_bindings.size(); ++mapping_index) {
+        get_mapping((u_int8_t) mapping_index);
     }
 }
-void clear_augment(u_int8_t index) {
-    if (index == 255) {
-        augmentations.clear();
+void get_mapping(u_int8_t index) {
+    if (index >= pin_bindings.size()) {
+        Serial.println("mapping index out of range: index=" + (String) index);
+        return;
+    }
+    PinMapping& mapping = pin_bindings[index];
+
+    //TODO
+    //Serial.println((String) index + 
+    //": pin number=" + (String) mapping.pin_name + 
+    //" input device=" + (String) mapping.input_type +
+    //" input id=" + (String) mapping.input_id +
+    //" inverted=" + (String) mapping.invert +
+    //" max report value=" + (String) mapping.max_report_value +
+    //" activation value=" + (String) mapping.activation_value +
+    //" scale=" + (String) mapping.scale +
+    //" deadzone percent=" + (String) mapping.deadzone_percent +
+    //" change amount before update=" + (String) mapping.change_amount_before_update +
+    //" quick release=" + (String) mapping.quick_release +
+    //" counter strafe help time ms=" + (String) mapping.counter_strafe_help_time_ms
+    //);
+}
+
+void get_augments(u_int8_t index) {
+    if (index != 255) {
+        get_augment(index);
         return;
     }
 
-    if (index >= 0 and index < augmentations.size()) {
-        augmentations.erase(augmentations.begin() + index);
-        augmentations.shrink_to_fit();
+    for (size_t augment_index = 0; augment_index < augmentations.size(); ++augment_index) {
+        get_augment((u_int8_t) augment_index);
     }
 }
-
-
+void get_augment(u_int8_t index) {
+    if (index >= augmentations.size()) {
+        Serial.println("Pin index out of range: index=" + (String) index);
+        return;
+    }
+    InputAugmentation& augment = augmentations[index];
+    
+    //TODO
+    //Serial.println((String) index + 
+    //": pin number=" + (String) augment.pin +
+    //" secondary pin number=" + (String) augment.secondary_pin +
+    //" type=" + (String) augment.type +
+    //" rotation=" + (String) augment.control_rotation
+    //);
+}
 
 void print_pins(u_int8_t index) {
     if (index != 255) {
@@ -286,12 +422,12 @@ void print_mappings(u_int8_t index) {
     }
 }
 void print_mapping(u_int8_t index) {
-    if (index > pin_bindings.size()) {
+    if (index >= pin_bindings.size()) {
         Serial.println("mapping index out of range: index=" + (String) index);
         return;
     }
     PinMapping& mapping = pin_bindings[index];
-    //TODO: figure out why sometimes pins print pin_name as NC (really large number)
+
     Serial.println((String) index + 
     ": pin number=" + (String) mapping.pin_name + 
     " input device=" + (String) mapping.input_type +
@@ -318,16 +454,56 @@ void print_augments(u_int8_t index) {
     }
 }
 void print_augment(u_int8_t index) {
-    if (index > augmentations.size()) {
+    if (index >= augmentations.size()) {
         Serial.println("Pin index out of range: index=" + (String) index);
         return;
     }
     InputAugmentation& augment = augmentations[index];
-    //TODO: figure out why sometimes pins print pin_name as NC (really large number)
+    
     Serial.println((String) index + 
     ": pin number=" + (String) augment.pin +
     " secondary pin number=" + (String) augment.secondary_pin +
     " type=" + (String) augment.type +
     " rotation=" + (String) augment.control_rotation
     );
+}
+
+
+
+void clear_pin(u_int8_t index) {
+    if (index == 255) {
+        pin_map.clear();
+        return;
+    }
+
+    auto it = pin_map.find(index);
+
+    if (it == pin_map.end()) {
+        Serial.println("Pin not found: pin=" + (String) index);
+        return;
+    }
+
+    pin_map.erase(index);
+}
+void clear_mapping(u_int8_t index) {
+    if (index == 255) {
+        pin_bindings.clear();
+        return;
+    }
+
+    if (index < pin_bindings.size()) {
+        pin_bindings.erase(pin_bindings.begin() + index);
+        //pin_bindings.shrink_to_fit();
+    }
+}
+void clear_augment(u_int8_t index) {
+    if (index == 255) {
+        augmentations.clear();
+        return;
+    }
+
+    if (index < augmentations.size()) {
+        augmentations.erase(augmentations.begin() + index);
+        augmentations.shrink_to_fit();
+    }
 }

@@ -5,7 +5,7 @@
 
 struct PinMapping {
   PinName pin_name = NC;
-  Pin* pin = nullptr;
+  //Pin* pin = nullptr;
   int input_type = 0;
   u_int16_t input_id = 0;
 

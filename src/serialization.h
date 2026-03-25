@@ -28,8 +28,10 @@ enum Commands{
 void parse_serial();
 void parse_line();
 
-void get_pins(u_int8_t index = 255);
-void get_pin(u_int8_t index);
+u_int16_t get_pin_data_size(u_int8_t index);
+void get_pin_data(u_int8_t index, u_int8_t *return_buffer);
+void add_pin_data_to_buffer(u_int8_t index, u_int8_t *&return_buffer);
+
 void get_mappings(u_int8_t index = 255);
 void get_mapping(u_int8_t index);
 void get_augments(u_int8_t index = 255);
@@ -45,7 +47,7 @@ void clear_mapping(u_int8_t index = 255);
 void clear_augment(u_int8_t index = 255);
 
 //2 bytes for start code, 2 bytes for payload length, >=1 byte for payload, and 1 byte for checksum
-#define MINIMUM_MESSAGE_LENGTH 3
+#define MINIMUM_MESSAGE_LENGTH 5 //this also represents the formatting data of commands, which excludes the payload
 void parse_serial() {
     if (Serial.available() > MINIMUM_MESSAGE_LENGTH) {
         //Serial.println("Parsing serial");
@@ -54,26 +56,29 @@ void parse_serial() {
 }
 
 //TODO: Verify that this actually works
-void create_command(uint8_t *buffer, uint8_t *data, size_t length) {
-    buffer[0] = 0xFF;
-    buffer[1] = 0x00;
+void create_command(u_int8_t *buffer, u_int8_t *data, size_t length) {
+    *buffer++ = 0xFF;
+    *buffer++ = 0x00;
     
     //2 byte payload length
-    buffer[2] = length >> 8 & 0xFF; //the bitwise and here may be redundant, because the buffer can only store uint8 anyways.
-    buffer[3] = length & 0xFF; //the bitwise and here may be redundant, because the buffer can only store uint8 anyways.
+    *buffer++ = length >> 8 & 0xFF; //the bitwise and here may be redundant, because the buffer can only store uint8 anyways.
+    *buffer++ = length & 0xFF; //the bitwise and here may be redundant, because the buffer can only store uint8 anyways.
 
     //payload
-    uint8_t sum = 0;
+    u_int8_t sum = 0;
     for (size_t i = 0; i < length; ++i) {
-        buffer[i + 4] = data[i];
+        *buffer++ = data[i];
         //checksum
         sum += data[i];
     }
-    buffer[length + 4] = sum;
+    *buffer++ = sum;
 }
 
 
 void parse_line() {//receive command
+    
+    //TODO: this basic command parsing logic should be placed into a dedicated function
+    
     //first two byes are the start code
     char first_byte = Serial.read();
     char second_byte = Serial.read();
@@ -116,7 +121,7 @@ void parse_line() {//receive command
         return;
     }
 
-    uint8_t sum = 0;
+    u_int8_t sum = 0;
     for (u_int8_t byte : payload_buffer) {
         sum += byte;
     }
@@ -131,6 +136,7 @@ void parse_line() {//receive command
     
     u_int8_t command = payload_buffer[message_index];
     message_index += 1; //increase the message index for that first byte that we consumed
+    //TODO: replace this message_index bit with the *buffer++ approach, like it's used in Serial.readBytes()
 
 
 
@@ -170,7 +176,17 @@ void parse_line() {//receive command
         case GetPins: {
             u_int8_t index = payload_buffer[message_index];
             message_index += 1; //increase the message index for the 1 byte that we just consumed
-            get_pins(index);
+
+            u_int16_t data_length = get_pin_data_size(index) + 3;  //+3 because each data section has the type and length
+            u_int8_t data_buffer[data_length];
+            get_pin_data(index, data_buffer);
+
+            u_int16_t message_length = data_length + MINIMUM_MESSAGE_LENGTH;
+            u_int8_t message_buffer[message_length];
+            create_command(message_buffer, data_buffer, data_length);
+
+            Serial.write(message_buffer, message_length);
+            
             break;
         }
         case GetMappings: {
@@ -299,32 +315,46 @@ void parse_line() {//receive command
 //etc...
 
 // 1 byte checksum
-
-void get_pins(u_int8_t index) {
+#define PIN_DATA_SIZE 2U //pin number, analog
+u_int16_t get_pin_data_size(u_int8_t index) {
     if (index != 255) {
-        
-        get_pin(index);
+        return PIN_DATA_SIZE;
+    }
+
+    return pin_map.size() * PIN_DATA_SIZE;
+}
+void get_pin_data(u_int8_t index, u_int8_t *return_buffer) {
+    *return_buffer++ = PinDeclaration;
+
+    u_int16_t data_size = get_pin_data_size(index);
+    *return_buffer++ = data_size >> 8 & 0xFF; //this bitwise and may be redundant
+    *return_buffer++ = data_size & 0xFF; //this bitwise and may be redundant
+
+    if (index != 255) {
+        add_pin_data_to_buffer(index, return_buffer);
         return;
     }
-
+    
     for (const auto& [pin_index, pin] : pin_map) {
-        get_pin((u_int8_t) pin_index);
+        add_pin_data_to_buffer(pin_index, return_buffer);
     }
 }
-void get_pin(u_int8_t index) {
+void add_pin_data_to_buffer(u_int8_t index, u_int8_t *&return_buffer) {
     auto it = pin_map.find(index);
     if (it == pin_map.end()) {
-        Serial.println("Pin not found: pin=" + (String) index);
+        
+        //return 0s as an indicator of a failure
+        *return_buffer++ = 0;
+        *return_buffer++ = 0;
+        
         return;
     }
 
     Pin& pin = it->second;
 
-    //TODO
-    //Serial.println((String) index + 
-    //": pin number=" + (String) pin.pin_name + 
-    //" analog=" + (String) pin.analog 
-    //);
+    //TODO: not sure if this pointer++ logic actually works it's way back to the origin of the buffer pointer
+    *return_buffer++ = pin.pin_name;
+    *return_buffer++ = pin.analog;
 }
 
 void get_mappings(u_int8_t index) {

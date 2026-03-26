@@ -6,12 +6,12 @@
 
 struct Pin {
     PinName pin_name = NC;
-    int value = 0;
     bool analog = false;
-    int inactive_value = HIGH;
+    u_int16_t inactive_value = HIGH;
+    int value = 0;
+    u_int last_change_time = -DEBOUNCE_TICKS_MS;
     int center = ADC_MAX_VALUE / 2; 
     //int range = ADC_MAX_VALUE / 2;
-    u_int last_change_time = -DEBOUNCE_TICKS_MS;
     
     Pin() = default;
     Pin(PinName pin_name, bool analog = false, int inactive_value = HIGH) : pin_name(pin_name), analog(analog), inactive_value(inactive_value) {};
@@ -32,6 +32,14 @@ struct Pin {
     }
     const bool is_bounce() {
         return (millis() - last_change_time) <= DEBOUNCE_TICKS_MS;
+    }
+
+    #define PIN_BYTE_SIZE 4U //pin number, analog, inactive value, inactive value
+    void pin_to_bytes(u_int8_t *&return_buffer) const {
+        *return_buffer++ = pin_name;
+        *return_buffer++ = analog;
+        *return_buffer++ = inactive_value >> 8 & 0xFF;
+        *return_buffer++ = inactive_value & 0xFF;
     }
 };
 

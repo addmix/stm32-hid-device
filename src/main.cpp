@@ -43,10 +43,13 @@ void setup() {
   while (!TinyUSBDevice.mounted()) delay(100);
 }
 
+bool nkro_updated = false;
+hid_mouse_report_t last_mouse = mouse;
+hid_gamepad_report_t last_gamepad = gamepad;
 void loop() {
   if (not usb_hid.ready()) {
     //Serial.println("not ready");
-    //delayMicroseconds(1000);
+    delayMicroseconds(100);
     return;
   }
   //delay(50);
@@ -72,13 +75,10 @@ void loop() {
     binding.update_value();
   }
 
-  bool nkro_updated = false;
 
-  hid_mouse_report_t last_mouse = mouse;
   //reset mouse inputs
   memset(&mouse, 0, sizeof(mouse));
   
-  hid_gamepad_report_t last_gamepad = gamepad;
   //reset gamepad inputs
   memset(&gamepad, 0, sizeof(gamepad));
   gamepad.hat = GAMEPAD_HAT_CENTERED;
@@ -114,8 +114,10 @@ void loop() {
   }
 
   if (nkro_updated) {
+    if (!usb_hid.ready()) return; //stop-gap fix for multiple reports not being allowed in each usb_hid poll
     //TODO fix the reporting logic for this
     NKROReport(usb_hid, KEYBOARD);
+    nkro_updated = false;
     Serial.println("send nkro");
   }
   if (
@@ -128,7 +130,9 @@ void loop() {
     gamepad.rx != last_gamepad.rx or
     gamepad.ry != last_gamepad.ry
   ) {
+    if (!usb_hid.ready()) return; //stop-gap fix for multiple reports not being allowed in each usb_hid poll
     usb_hid.sendReport(GAMEPAD, &gamepad, sizeof(gamepad));
+    last_gamepad = gamepad;
     Serial.println("send gamepad");
     //Serial.println(gamepad.x);
     //Serial.println(last_gamepad.x);
@@ -140,7 +144,9 @@ void loop() {
     mouse.wheel != 0.0 or
     mouse.pan != 0.0
   ) {
+    if (!usb_hid.ready()) return; //stop-gap fix for multiple reports not being allowed in each usb_hid poll
     usb_hid.sendReport(MOUSE, &mouse, sizeof(mouse));
+    last_mouse = mouse;
     Serial.println("send mouse");
   }
 

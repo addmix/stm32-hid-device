@@ -45,7 +45,7 @@ std::vector<PinMapping> pin_bindings = {
     
     PinMapping(PA_1, GAMEPAD_AXIS, GAMEPAD_LEFT_STICK_X, false),
     PinMapping(PA_0, GAMEPAD_AXIS, GAMEPAD_LEFT_STICK_Y, true),
-
+    
     //index
     PinMapping(PB_9, KEYBOARD, HID_KEY_1),  //tip
     PinMapping(PB_8, KEYBOARD, HID_KEY_R), //rest

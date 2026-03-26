@@ -28,14 +28,13 @@ enum Commands{
 void parse_serial();
 void parse_line();
 
-u_int16_t get_pin_data_size(u_int8_t index);
-void get_pin_data(u_int8_t index, u_int8_t *return_buffer);
-void add_pin_data_to_buffer(u_int8_t index, u_int8_t *&return_buffer);
+u_int16_t get_pin_data_size(u_int8_t index = 255);
+void get_pin_data(u_int8_t*& return_buffer, u_int8_t index = 255);
+u_int16_t get_mapping_data_size(u_int8_t index = 255);
+void get_mapping_data(u_int8_t*& return_buffer, u_int8_t index = 255);
+u_int16_t get_augment_data_size(u_int8_t index = 255);
+void get_augment_data(u_int8_t*& return_buffer, u_int8_t index = 255);
 
-void get_mappings(u_int8_t index = 255);
-void get_mapping(u_int8_t index);
-void get_augments(u_int8_t index = 255);
-void get_augment(u_int8_t index);
 void print_pins(u_int8_t index = 255);
 void print_pin(u_int8_t index);
 void print_mappings(u_int8_t index = 255);
@@ -132,34 +131,8 @@ void parse_line() {//receive command
     }
 
     //keeps track of how far into the payload we are.
-    int message_index = 0;
-    
-    u_int8_t command = payload_buffer[message_index];
-    message_index += 1; //increase the message index for that first byte that we consumed
-    //TODO: replace this message_index bit with the *buffer++ approach, like it's used in Serial.readBytes()
-
-
-
-
-
-
-
-
-    //TODO
-    //TODO
-    //TODO
-    //TODO
-    //TODO - Implement separate, or repurpose current printing commands to print raw data instead of formatted strings, and perform formatting in desktop app
-    //TODO
-    //TODO
-    //TODO
-    //TODO
-
-
-
-
-
-
+    u_int8_t* message_index = payload_buffer;
+    u_int8_t command = *message_index++;
 
     switch (command) {
         case Reset: {
@@ -169,36 +142,70 @@ void parse_line() {//receive command
             break;
         }
         case GetConfigs: {
-            
-            //TODO
+            u_int16_t data_length = get_pin_data_size() + get_mapping_data_size() + get_augment_data_size();
+            u_int8_t data_buffer[data_length];
+
+            u_int8_t* data_buffer_index = data_buffer;
+            get_pin_data(data_buffer_index);
+            get_mapping_data(data_buffer_index);
+            get_augment_data(data_buffer_index);
+
+            u_int16_t message_length = MINIMUM_MESSAGE_LENGTH + data_length;
+            u_int8_t message_buffer[message_length];
+            create_command(message_buffer, data_buffer, data_length);
+
+            Serial.write(message_buffer, message_length);
             break;
         }
         case GetPins: {
-            u_int8_t index = payload_buffer[message_index];
-            message_index += 1; //increase the message index for the 1 byte that we just consumed
+            u_int8_t index = *message_index++;
 
-            u_int16_t data_length = get_pin_data_size(index) + 3;  //+3 because each data section has the type and length
+            u_int16_t data_length = get_pin_data_size(index);
             u_int8_t data_buffer[data_length];
-            get_pin_data(index, data_buffer);
+            
+            u_int8_t* data_buffer_index = data_buffer;
+            get_pin_data(data_buffer_index, index);
+
+            u_int16_t message_length = data_length + MINIMUM_MESSAGE_LENGTH;
+            u_int8_t message_buffer[message_length];
+            create_command(message_buffer, data_buffer, data_length);
+
+            //Serial.write(message_buffer, message_length);
+            Serial.write(data_buffer, data_length);
+            
+            break;
+        }
+        case GetMappings: {
+            int index = *message_index++;
+
+            u_int16_t data_length = get_mapping_data_size(index);
+            u_int8_t data_buffer[data_length];
+
+            u_int8_t* data_buffer_index = data_buffer;
+            get_mapping_data(data_buffer_index, index);
 
             u_int16_t message_length = data_length + MINIMUM_MESSAGE_LENGTH;
             u_int8_t message_buffer[message_length];
             create_command(message_buffer, data_buffer, data_length);
 
             Serial.write(message_buffer, message_length);
-            
-            break;
-        }
-        case GetMappings: {
-            int index = payload_buffer[message_index];
-            message_index += 1; //increase the message index for the 1 byte that we just consumed
-            get_mappings(index);
             break;
         }
         case GetAugments: {
-            int index = payload_buffer[message_index];
-            message_index += 1; //increase the message index for the 1 byte that we just consumed
-            get_augments(index);
+            int index = *message_index++;
+            
+            u_int16_t data_length = get_augment_data_size(index);
+            u_int8_t data_buffer[data_length];
+
+            u_int8_t* data_buffer_index = data_buffer;
+            get_augment_data(data_buffer_index, index);
+
+            u_int16_t message_length = data_length + MINIMUM_MESSAGE_LENGTH;
+            u_int8_t message_buffer[message_length];
+            create_command(message_buffer, data_buffer, data_length);
+
+            Serial.write(message_buffer, message_length);
+            break;
             break;
         }
         case ListConfigs: {
@@ -215,22 +222,19 @@ void parse_line() {//receive command
             break;
         }
         case ListPins: {
-            u_int8_t index = payload_buffer[message_index];
-            message_index += 1; //increase the message index for the 1 byte that we just consumed
+            u_int8_t index = *message_index++;
             Serial.println("Printing pin at index=" + (String) index);
             print_pins(index);
             break;
         }
         case ListMappings: {
-            int index = payload_buffer[message_index];
-            message_index += 1; //increase the message index for the 1 byte that we just consumed
+            int index = *message_index++;
             Serial.println("Printing mapping at index=" + (String) index);
             print_mappings(index);
             break;
         }
         case ListAugments: {
-            int index = payload_buffer[message_index];
-            message_index += 1; //increase the message index for the 1 byte that we just consumed
+            int index = *message_index++;
             Serial.println("Printing augment at index=" + (String) index);
             print_augments(index);
             break;
@@ -243,15 +247,13 @@ void parse_line() {//receive command
             break;
         }
         case ClearPin: {
-            int index = payload_buffer[message_index];
-            message_index += 1; //increase the message index for the 1 byte that we just consumed
+            int index = *message_index++;
             clear_pin(index);
             Serial.println("Pins cleared");
             break;
         }
         case ClearMap: {
-            int index = payload_buffer[message_index];
-            message_index += 1; //increase the message index for the 1 byte that we just consumed
+            int index = *message_index++;
             clear_mapping(index);
             //not sure if I should actually deallocate memory, so i'll keep it simple for now.
             //pin_bindings.shrink_to_fit();
@@ -259,8 +261,7 @@ void parse_line() {//receive command
             break;
         }
         case ClearAugments: {
-            int index = payload_buffer[message_index];
-            message_index += 1; //increase the message index for the 1 byte that we just consumed
+            int index = *message_index++;
             clear_augment(index);
             //not sure if I should actually deallocate memory, so i'll keep it simple for now.
             //augmentations.shrink_to_fit();
@@ -271,19 +272,18 @@ void parse_line() {//receive command
 
         case PinDeclaration: {
             //syntax: int pin_number, bool analog
-            PinName pin = (PinName) payload_buffer[message_index + 0];
-            bool analog = payload_buffer[message_index + 1];
-            message_index += 2; //increase the message index for the 2 bytes that we just consumed
+            PinName pin = (PinName) *message_index++;
+            bool analog = *message_index++;
             pin_map[pin] = Pin(pin, analog);
             Serial.println("Added new pin: pin number=" + (String) pin + " analog=" + (String) analog);
             break;
         }
         case InputMapping: {
-            PinName pin = (PinName) payload_buffer[message_index + 0];
-            int input_device = payload_buffer[message_index + 1];
-            int input_id = payload_buffer[message_index + 2];
-            bool invert = payload_buffer[message_index + 3];
-            message_index += 4; //increase the message index for the 5 bytes that we just consumed
+            PinName pin = (PinName) *message_index++;
+            int input_device = *message_index++;
+            int input_id = *message_index++;
+            bool invert = *message_index++;
+
             
             pin_bindings.push_back(PinMapping(pin, input_device, input_id, invert));
             Serial.println("Added new mapping: pin number=" + (String) pin + " input device=" + (String) input_device + " input id=" + (String) input_id + " inverted=" + (String) invert);
@@ -315,15 +315,16 @@ void parse_line() {//receive command
 //etc...
 
 // 1 byte checksum
-#define PIN_DATA_SIZE 2U //pin number, analog
+
+
 u_int16_t get_pin_data_size(u_int8_t index) {
     if (index != 255) {
-        return PIN_DATA_SIZE;
+        return PIN_BYTE_SIZE + 3; //+3 because each data section has the type and length
     }
 
-    return pin_map.size() * PIN_DATA_SIZE;
+    return pin_map.size() * PIN_BYTE_SIZE + 3; //+3 because each data section has the type and length
 }
-void get_pin_data(u_int8_t index, u_int8_t *return_buffer) {
+void get_pin_data(u_int8_t*& return_buffer, u_int8_t index) {
     *return_buffer++ = PinDeclaration;
 
     u_int16_t data_size = get_pin_data_size(index);
@@ -331,90 +332,98 @@ void get_pin_data(u_int8_t index, u_int8_t *return_buffer) {
     *return_buffer++ = data_size & 0xFF; //this bitwise and may be redundant
 
     if (index != 255) {
-        add_pin_data_to_buffer(index, return_buffer);
+        auto it = pin_map.find(index);
+        if (it != pin_map.end()) {
+            it->second.pin_to_bytes(return_buffer);
+        } else {
+            memset(return_buffer, 0, PIN_BYTE_SIZE); //set 0s for the expected bytes of the invalid pin
+            return_buffer += PIN_BYTE_SIZE; //increment the buffer pointer for those expected bytes
+        }
         return;
     }
     
     for (const auto& [pin_index, pin] : pin_map) {
-        add_pin_data_to_buffer(pin_index, return_buffer);
+        pin.pin_to_bytes(return_buffer);
     }
 }
-void add_pin_data_to_buffer(u_int8_t index, u_int8_t *&return_buffer) {
-    auto it = pin_map.find(index);
-    if (it == pin_map.end()) {
-        
-        //return 0s as an indicator of a failure
-        *return_buffer++ = 0;
-        *return_buffer++ = 0;
-        
-        return;
-    }
 
-    Pin& pin = it->second;
 
-    //TODO: not sure if this pointer++ logic actually works it's way back to the origin of the buffer pointer
-    *return_buffer++ = pin.pin_name;
-    *return_buffer++ = pin.analog;
-}
 
-void get_mappings(u_int8_t index) {
+u_int16_t get_mapping_data_size(u_int8_t index) {
     if (index != 255) {
-        get_mapping(index);
-        return;
+        return MAPPING_BYTE_SIZE + 3; //+3 because each data section has the type and length
     }
 
-    for (size_t mapping_index = 0; mapping_index < pin_bindings.size(); ++mapping_index) {
-        get_mapping((u_int8_t) mapping_index);
-    }
+    return pin_bindings.size() * MAPPING_BYTE_SIZE + 3; //+3 because each data section has the type and length
 }
-void get_mapping(u_int8_t index) {
-    if (index >= pin_bindings.size()) {
-        Serial.println("mapping index out of range: index=" + (String) index);
-        return;
-    }
-    PinMapping& mapping = pin_bindings[index];
+void get_mapping_data(u_int8_t*& return_buffer, u_int8_t index) {
+    *return_buffer++ = InputMapping;
 
-    //TODO
-    //Serial.println((String) index + 
-    //": pin number=" + (String) mapping.pin_name + 
-    //" input device=" + (String) mapping.input_type +
-    //" input id=" + (String) mapping.input_id +
-    //" inverted=" + (String) mapping.invert +
-    //" max report value=" + (String) mapping.max_report_value +
-    //" activation value=" + (String) mapping.activation_value +
-    //" scale=" + (String) mapping.scale +
-    //" deadzone percent=" + (String) mapping.deadzone_percent +
-    //" change amount before update=" + (String) mapping.change_amount_before_update +
-    //" quick release=" + (String) mapping.quick_release +
-    //" counter strafe help time ms=" + (String) mapping.counter_strafe_help_time_ms
-    //);
-}
+    u_int16_t data_size = get_mapping_data_size(index);
+    *return_buffer++ = data_size >> 8 & 0xFF; //this bitwise and may be redundant
+    *return_buffer++ = data_size & 0xFF; //this bitwise and may be redundant
 
-void get_augments(u_int8_t index) {
     if (index != 255) {
-        get_augment(index);
+        if (index < augmentations.size()) {
+            PinMapping& mapping = pin_bindings[index];
+            mapping.mapping_to_bytes(return_buffer);
+        } else {
+            memset(return_buffer, 0, MAPPING_BYTE_SIZE); //set 0s for the expected bytes of the invalid pin
+            return_buffer += MAPPING_BYTE_SIZE; //increment the buffer pointer for those expected bytes
+        }
         return;
     }
-
-    for (size_t augment_index = 0; augment_index < augmentations.size(); ++augment_index) {
-        get_augment((u_int8_t) augment_index);
-    }
-}
-void get_augment(u_int8_t index) {
-    if (index >= augmentations.size()) {
-        Serial.println("Pin index out of range: index=" + (String) index);
-        return;
-    }
-    InputAugmentation& augment = augmentations[index];
     
-    //TODO
-    //Serial.println((String) index + 
-    //": pin number=" + (String) augment.pin +
-    //" secondary pin number=" + (String) augment.secondary_pin +
-    //" type=" + (String) augment.type +
-    //" rotation=" + (String) augment.control_rotation
-    //);
+    for (size_t mapping_index = 0; mapping_index < pin_bindings.size(); ++mapping_index) {
+        PinMapping& mapping = pin_bindings[mapping_index];
+        mapping.mapping_to_bytes(return_buffer);
+    }
 }
+
+
+
+
+
+
+
+u_int16_t get_augment_data_size(u_int8_t index) {
+    if (index != 255) {
+        return AUGMENT_BYTE_SIZE + 3; //+3 because each data section has the type and length
+    }
+
+    return augmentations.size() * AUGMENT_BYTE_SIZE + 3; //+3 because each data section has the type and length
+}
+void get_augment_data(u_int8_t*& return_buffer, u_int8_t index) {
+    *return_buffer++ = Augmentation;
+
+    u_int16_t data_size = get_augment_data_size(index);
+    *return_buffer++ = data_size >> 8 & 0xFF; //this bitwise and may be redundant
+    *return_buffer++ = data_size & 0xFF; //this bitwise and may be redundant
+
+    if (index != 255) {
+        if (index >= augmentations.size()) {
+            InputAugmentation& augment = augmentations[index];
+            augment.augment_to_bytes(return_buffer);
+        } else {
+            memset(return_buffer, 0, AUGMENT_BYTE_SIZE); //set 0s for the expected bytes of the invalid pin
+            return_buffer += AUGMENT_BYTE_SIZE; //increment the buffer pointer for those expected bytesd
+        }
+        return;
+    }
+    
+    for (size_t augment_index = 0; augment_index < augmentations.size(); ++augment_index) {
+        InputAugmentation& augment = augmentations[augment_index];
+        augment.augment_to_bytes(return_buffer);
+    }
+}
+
+
+
+
+
+
+
+
 
 void print_pins(u_int8_t index) {
     if (index != 255) {
@@ -466,7 +475,7 @@ void print_mapping(u_int8_t index) {
     " max report value=" + (String) mapping.max_report_value +
     " activation value=" + (String) mapping.activation_value +
     " scale=" + (String) mapping.scale +
-    " deadzone percent=" + (String) mapping.deadzone_percent +
+    " deadzone=" + (String) mapping.deadzone +
     " change amount before update=" + (String) mapping.change_amount_before_update +
     " quick release=" + (String) mapping.quick_release +
     " counter strafe help time ms=" + (String) mapping.counter_strafe_help_time_ms

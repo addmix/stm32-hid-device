@@ -28,6 +28,14 @@ func _on_pressed() -> void:
 	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.Reset))
 "
 
+[sub_resource type="GDScript" id="GDScript_kek77"]
+script/source = "extends Button
+
+
+func _on_pressed() -> void:
+	$\"../../../..\".serial_disconnect()
+"
+
 [sub_resource type="GDScript" id="GDScript_lquwl"]
 script/source = "extends HBoxContainer
 
@@ -177,6 +185,13 @@ layout_mode = 2
 tooltip_text = "Send the reset command to the device"
 text = "Reset"
 script = SubResource("GDScript_1bvp3")
+
+[node name="Disconnect" type="Button" parent="VBoxContainer/SerialOutput/VBoxContainer" unique_id=1304006721]
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+tooltip_text = "Send the reset command to the device"
+text = "Disconnect"
+script = SubResource("GDScript_kek77")
 
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer" unique_id=1070246682]
 layout_mode = 2
@@ -438,6 +453,7 @@ text = "Delete Augments"
 
 [connection signal="pressed" from="VBoxContainer/SerialOutput/VBoxContainer/ClearButton" to="VBoxContainer/SerialOutput/VBoxContainer/ClearButton" method="_on_pressed"]
 [connection signal="pressed" from="VBoxContainer/SerialOutput/VBoxContainer/ResetButton" to="VBoxContainer/SerialOutput/VBoxContainer/ResetButton" method="_on_pressed"]
+[connection signal="pressed" from="VBoxContainer/SerialOutput/VBoxContainer/Disconnect" to="VBoxContainer/SerialOutput/VBoxContainer/Disconnect" method="_on_pressed"]
 [connection signal="text_submitted" from="VBoxContainer/CommandLine/CommandEdit" to="VBoxContainer/CommandLine" method="_on_send_command_pressed"]
 [connection signal="pressed" from="VBoxContainer/CommandLine/SendCommand" to="VBoxContainer/CommandLine" method="_on_send_command_pressed"]
 [connection signal="pressed" from="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/ListConfigs/ListConfigsButton" to="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/ListConfigs" method="_on_list_configs_button_pressed"]

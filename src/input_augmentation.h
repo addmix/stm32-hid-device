@@ -48,4 +48,19 @@ struct InputAugmentation {
             break;
         }
     }
+
+    
+    #define AUGMENT_BYTE_SIZE 7U //pin number, analog
+    void augment_to_bytes(u_int8_t *&return_buffer) const {
+        *return_buffer++ = pin;
+        *return_buffer++ = secondary_pin;
+        *return_buffer++ = type;
+
+        u_int32_t rotation_bits = 0;
+        memcpy(&rotation_bits, &control_rotation, 4);
+        *return_buffer++ = rotation_bits >> 24 & 0xFF;
+        *return_buffer++ = rotation_bits >> 16 & 0xFF;
+        *return_buffer++ = rotation_bits >> 8 & 0xFF;
+        *return_buffer++ = rotation_bits & 0xFF;
+    }
 };

@@ -14,22 +14,26 @@ void PinMapping::update_value() {
     previous_value = value;
 
     if (pin.is_bounce() and not pin.analog) return; //debounce implementation
-
+    //TODO: it appears that positive axis values have discrete "steps", where negative axis values are smooth.
     int new_value = read_value();
 
     //apply deadzone
-    if (pin.analog and abs(new_value) < (int) abs((float)max_report_value * deadzone_percent)) {
-        new_value = 0;
+    //TODO: fix deadzone implementation so that there isn't a "jump" when you exit the deadzone, where the edge of the deadzone is 0, instead of the center
+    //part of this could also be a circular deadzone implementation
+    if (pin.analog and (abs(new_value) < (deadzone / 255.0) * max_report_value) ) {
+        value = 0;
+        return;
     }
     
     //prevents over-reporting of thumbstick movements as there is noise in the ADC
     if (pin.analog and abs(previous_value - new_value) < change_amount_before_update) {
         return;
     }
+    
     value = new_value;
 }
 
-const int PinMapping::get_value_digital() {
+int PinMapping::get_value_digital() const {
     //TODO: make these pin_map.find(pin_name) calls less repetetive
     auto it = pin_map.find(pin_name);
     if (it == pin_map.end()) {
@@ -55,7 +59,7 @@ const int PinMapping::get_value_digital() {
     return temp_value;
 }
 
-const int PinMapping::get_value_analog() {
+int PinMapping::get_value_analog() const {
     //TODO: make these pin_map.find(pin_name) calls less repetetive
     auto it = pin_map.find(pin_name);
     if (it == pin_map.end()) {
@@ -76,7 +80,7 @@ const int PinMapping::get_value_analog() {
     }
     return temp_value;
 }
-const int PinMapping::read_value() {
+int PinMapping::read_value() const {
     //TODO: make these pin_map.find(pin_name) calls less repetetive
     auto it = pin_map.find(pin_name);
     if (it == pin_map.end()) {
@@ -91,14 +95,14 @@ const int PinMapping::read_value() {
     return get_value_digital();
 }
 
-const int PinMapping::get_value() {
+int PinMapping::get_value() const {
     return value;
 }
 
-const bool PinMapping::is_pressed() {
+bool PinMapping::is_pressed() const {
     return is_pressed(value);
 }
-const bool PinMapping::is_pressed(int test_value) {
+bool PinMapping::is_pressed(int test_value) const {
     //TODO: make these pin_map.find(pin_name) calls less repetetive
     auto it = pin_map.find(pin_name);
     if (it == pin_map.end()) {
@@ -113,10 +117,10 @@ const bool PinMapping::is_pressed(int test_value) {
 
     return test_value != 0;
 }
-const bool PinMapping::is_released() {
+bool PinMapping::is_released() const {
     return is_released(value);
 }
-const bool PinMapping::is_released(int test_value) {
+bool PinMapping::is_released(int test_value) const {
     //TODO: make these pin_map.find(pin_name) calls less repetetive
     auto it = pin_map.find(pin_name);
     if (it == pin_map.end()) {
@@ -130,12 +134,14 @@ const bool PinMapping::is_released(int test_value) {
 
     return test_value == 0;
 }
-const bool PinMapping::is_just_pressed() {
+bool PinMapping::is_just_pressed() const {
     return is_pressed() and is_released(previous_value);
 }
-const bool PinMapping::is_just_released() {
+bool PinMapping::is_just_released() const {
     return is_released() and is_pressed(previous_value);
 }
-const bool PinMapping::is_just_changed() {
+bool PinMapping::is_just_changed() const {
     return is_just_pressed() or is_just_released();
 }
+
+

@@ -4,18 +4,24 @@
 #include "input_augmentation.h"
 #include "config.h"
 
+//TODO: Clean up command list. Most of the commands for specific types (pins, mappings, augments), the list commands, and the clear commands aren't very useful.
+// Maybe the simplified list could be: Reset, TextCommand, GetConfigs, SetConfigs, ListConfigs, ClearConfig,
 enum Commands{
-    Reset,
-    TextCommand,
-    GetConfigs,
+        Reset,
+        TextCommand,
+        GetConfigs,
     GetPins,
     GetMappings,
     GetAugments,
-    ListConfigs,
+        SetConfigs,
+    SetPins,
+    SetMappings,
+    SetAugments,
+        ListConfigs,
     ListPins,
     ListMappings,
     ListAugments,
-    ClearConfig,
+        ClearConfig,
     ClearPin,
     ClearMap,
     ClearAugments,
@@ -55,7 +61,7 @@ void parse_serial() {
 }
 
 //TODO: Verify that this actually works
-void create_command(u_int8_t *buffer, u_int8_t *data, size_t length) {
+void create_command(u_int8_t *buffer, u_int8_t command, u_int8_t *data, size_t length) {
     *buffer++ = 0xFF;
     *buffer++ = 0x00;
     
@@ -63,8 +69,11 @@ void create_command(u_int8_t *buffer, u_int8_t *data, size_t length) {
     *buffer++ = length >> 8 & 0xFF; //the bitwise and here may be redundant, because the buffer can only store uint8 anyways.
     *buffer++ = length & 0xFF; //the bitwise and here may be redundant, because the buffer can only store uint8 anyways.
 
+    *buffer++ = command;
+
     //payload
-    u_int8_t sum = 0;
+    //command is included in the checksum because the command is considered as the first byte of the payload
+    u_int8_t sum = command;
     for (size_t i = 0; i < length; ++i) {
         *buffer++ = data[i];
         //checksum
@@ -142,17 +151,18 @@ void parse_line() {//receive command
             break;
         }
         case GetConfigs: {
-            u_int16_t data_length = get_pin_data_size() + get_mapping_data_size() + get_augment_data_size();
+            u_int16_t data_length = get_pin_data_size() + 3 + get_mapping_data_size() + 3 + get_augment_data_size() + 3; //+3 because each data section needs a command byte, and 2 size bytes. the +3 isn't baked into the size functions because those 3 bytes are not considered part of the section payload.
             u_int8_t data_buffer[data_length];
 
+            //TODO: need to add correct command number to thism
             u_int8_t* data_buffer_index = data_buffer;
             get_pin_data(data_buffer_index);
             get_mapping_data(data_buffer_index);
             get_augment_data(data_buffer_index);
 
-            u_int16_t message_length = MINIMUM_MESSAGE_LENGTH + data_length;
+            u_int16_t message_length = MINIMUM_MESSAGE_LENGTH + data_length + 1; //+1 for the command byte
             u_int8_t message_buffer[message_length];
-            create_command(message_buffer, data_buffer, data_length);
+            create_command(message_buffer, GetConfigs, data_buffer, data_length);
 
             Serial.write(message_buffer, message_length);
             break;
@@ -166,9 +176,9 @@ void parse_line() {//receive command
             u_int8_t* data_buffer_index = data_buffer;
             get_pin_data(data_buffer_index, index);
 
-            u_int16_t message_length = data_length + MINIMUM_MESSAGE_LENGTH;
+            u_int16_t message_length = MINIMUM_MESSAGE_LENGTH + data_length + 1; //+1 for the command byte
             u_int8_t message_buffer[message_length];
-            create_command(message_buffer, data_buffer, data_length);
+            create_command(message_buffer, GetPins, data_buffer, data_length);
 
             //Serial.write(message_buffer, message_length);
             Serial.write(data_buffer, data_length);
@@ -184,9 +194,9 @@ void parse_line() {//receive command
             u_int8_t* data_buffer_index = data_buffer;
             get_mapping_data(data_buffer_index, index);
 
-            u_int16_t message_length = data_length + MINIMUM_MESSAGE_LENGTH;
+            u_int16_t message_length = MINIMUM_MESSAGE_LENGTH + data_length + 1; //+1 for the command byte
             u_int8_t message_buffer[message_length];
-            create_command(message_buffer, data_buffer, data_length);
+            create_command(message_buffer, GetMappings, data_buffer, data_length);
 
             Serial.write(message_buffer, message_length);
             break;
@@ -200,13 +210,60 @@ void parse_line() {//receive command
             u_int8_t* data_buffer_index = data_buffer;
             get_augment_data(data_buffer_index, index);
 
-            u_int16_t message_length = data_length + MINIMUM_MESSAGE_LENGTH;
+            u_int16_t message_length = MINIMUM_MESSAGE_LENGTH + data_length + 1; //+1 for the command byte
             u_int8_t message_buffer[message_length];
-            create_command(message_buffer, data_buffer, data_length);
+            create_command(message_buffer, GetAugments, data_buffer, data_length);
 
             Serial.write(message_buffer, message_length);
             break;
-            break;
+        }
+        case SetConfigs: {
+            break; //TODO
+
+            //print("get configs")
+			//#TODO: these data_type values aren't actually used by the parser, but they should be.
+			//#right now it only works because both codebases agree on the order
+			//
+			//#PinDeclaration
+			//var data_type : int = read_next_byte.call()
+			//print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
+			//var section_length : int = (read_next_byte.call() << 8) + read_next_byte.call()
+			//print("section length=", section_length)
+			//print(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
+			//var pins : Array[PinDeclaration] = PinDeclaration.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
+			//print("created pin objects: ", pins)
+			//read_buffer_index += section_length
+			//
+			//#InputMapping
+			//data_type = read_next_byte.call()
+			//print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
+			//section_length = (read_next_byte.call() << 8) + read_next_byte.call()
+			//print("section length=", section_length)
+			//print(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
+			//var mappings : Array[InputMapping] = InputMapping.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
+			//print("created mapping objects: ", mappings)
+			//read_buffer_index += section_length
+			//
+			//#Augmentation
+			//data_type = read_next_byte.call()
+			//print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
+			//section_length = (read_next_byte.call() << 8) + read_next_byte.call()
+			//print("section length=", section_length)
+			//print(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
+			//var augments : Array[Augmentation] = Augmentation.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
+			//print("created augment objects: ", augments)
+			//read_buffer_index += section_length
+			//
+			//print("remaining bytes in buffer=", read_buffer.slice(read_buffer_index))
+        }
+        case SetPins: {
+            break; //TODO
+        }
+        case SetMappings: {
+            break; //TODO
+        }
+        case SetAugments: {
+            break; //TODO
         }
         case ListConfigs: {
             
@@ -290,7 +347,7 @@ void parse_line() {//receive command
             break;
         }
         case Augmentation: {
-
+            //TODO
             break;
         }
     }
@@ -319,10 +376,10 @@ void parse_line() {//receive command
 
 u_int16_t get_pin_data_size(u_int8_t index) {
     if (index != 255) {
-        return PIN_BYTE_SIZE + 3; //+3 because each data section has the type and length
+        return PIN_BYTE_SIZE;
     }
 
-    return pin_map.size() * PIN_BYTE_SIZE + 3; //+3 because each data section has the type and length
+    return pin_map.size() * PIN_BYTE_SIZE;
 }
 void get_pin_data(u_int8_t*& return_buffer, u_int8_t index) {
     *return_buffer++ = PinDeclaration;
@@ -334,7 +391,7 @@ void get_pin_data(u_int8_t*& return_buffer, u_int8_t index) {
     if (index != 255) {
         auto it = pin_map.find(index);
         if (it != pin_map.end()) {
-            it->second.pin_to_bytes(return_buffer);
+            it->second.to_bytes(return_buffer);
         } else {
             memset(return_buffer, 0, PIN_BYTE_SIZE); //set 0s for the expected bytes of the invalid pin
             return_buffer += PIN_BYTE_SIZE; //increment the buffer pointer for those expected bytes
@@ -343,7 +400,7 @@ void get_pin_data(u_int8_t*& return_buffer, u_int8_t index) {
     }
     
     for (const auto& [pin_index, pin] : pin_map) {
-        pin.pin_to_bytes(return_buffer);
+        pin.to_bytes(return_buffer);
     }
 }
 
@@ -351,10 +408,10 @@ void get_pin_data(u_int8_t*& return_buffer, u_int8_t index) {
 
 u_int16_t get_mapping_data_size(u_int8_t index) {
     if (index != 255) {
-        return MAPPING_BYTE_SIZE + 3; //+3 because each data section has the type and length
+        return MAPPING_BYTE_SIZE;
     }
 
-    return pin_bindings.size() * MAPPING_BYTE_SIZE + 3; //+3 because each data section has the type and length
+    return pin_bindings.size() * MAPPING_BYTE_SIZE;
 }
 void get_mapping_data(u_int8_t*& return_buffer, u_int8_t index) {
     *return_buffer++ = InputMapping;
@@ -366,7 +423,7 @@ void get_mapping_data(u_int8_t*& return_buffer, u_int8_t index) {
     if (index != 255) {
         if (index < augmentations.size()) {
             PinMapping& mapping = pin_bindings[index];
-            mapping.mapping_to_bytes(return_buffer);
+            mapping.to_bytes(return_buffer);
         } else {
             memset(return_buffer, 0, MAPPING_BYTE_SIZE); //set 0s for the expected bytes of the invalid pin
             return_buffer += MAPPING_BYTE_SIZE; //increment the buffer pointer for those expected bytes
@@ -376,7 +433,7 @@ void get_mapping_data(u_int8_t*& return_buffer, u_int8_t index) {
     
     for (size_t mapping_index = 0; mapping_index < pin_bindings.size(); ++mapping_index) {
         PinMapping& mapping = pin_bindings[mapping_index];
-        mapping.mapping_to_bytes(return_buffer);
+        mapping.to_bytes(return_buffer);
     }
 }
 
@@ -388,10 +445,10 @@ void get_mapping_data(u_int8_t*& return_buffer, u_int8_t index) {
 
 u_int16_t get_augment_data_size(u_int8_t index) {
     if (index != 255) {
-        return AUGMENT_BYTE_SIZE + 3; //+3 because each data section has the type and length
+        return AUGMENT_BYTE_SIZE;
     }
 
-    return augmentations.size() * AUGMENT_BYTE_SIZE + 3; //+3 because each data section has the type and length
+    return augmentations.size() * AUGMENT_BYTE_SIZE;
 }
 void get_augment_data(u_int8_t*& return_buffer, u_int8_t index) {
     *return_buffer++ = Augmentation;
@@ -403,7 +460,7 @@ void get_augment_data(u_int8_t*& return_buffer, u_int8_t index) {
     if (index != 255) {
         if (index >= augmentations.size()) {
             InputAugmentation& augment = augmentations[index];
-            augment.augment_to_bytes(return_buffer);
+            augment.to_bytes(return_buffer);
         } else {
             memset(return_buffer, 0, AUGMENT_BYTE_SIZE); //set 0s for the expected bytes of the invalid pin
             return_buffer += AUGMENT_BYTE_SIZE; //increment the buffer pointer for those expected bytesd
@@ -413,7 +470,7 @@ void get_augment_data(u_int8_t*& return_buffer, u_int8_t index) {
     
     for (size_t augment_index = 0; augment_index < augmentations.size(); ++augment_index) {
         InputAugmentation& augment = augmentations[augment_index];
-        augment.augment_to_bytes(return_buffer);
+        augment.to_bytes(return_buffer);
     }
 }
 

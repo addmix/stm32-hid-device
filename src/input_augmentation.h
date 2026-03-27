@@ -51,7 +51,7 @@ struct InputAugmentation {
 
     
     #define AUGMENT_BYTE_SIZE 7U //pin number, analog
-    void augment_to_bytes(u_int8_t *&return_buffer) const {
+    void to_bytes(u_int8_t *&return_buffer) const {
         *return_buffer++ = pin;
         *return_buffer++ = secondary_pin;
         *return_buffer++ = type;
@@ -63,4 +63,27 @@ struct InputAugmentation {
         *return_buffer++ = rotation_bits >> 8 & 0xFF;
         *return_buffer++ = rotation_bits & 0xFF;
     }
+
+    //TODO
+    //static func from_bytes(bytes : PackedByteArray) -> Augmentation:
+	//if bytes.size() != BYTE_SIZE:
+	//	push_error("Passed byte array does not match the byte size of Augmentation.")
+	//
+	//var _pin : int = bytes[0]
+	//var _secondary_pin : bool = bytes[1]
+	//var _type : int = bytes[2]
+	//
+	//var rotation_bytes := bytes.slice(3, 7)
+	//rotation_bytes.reverse()
+	//var _control_rotation : float = rotation_bytes.decode_float(0)
+	//
+	//return Augmentation.new(_pin, _secondary_pin, _type, _control_rotation)
+    //
+    //static func from_byte_array(bytes : PackedByteArray) -> Array[Augmentation]:
+	//var array : Array[Augmentation] = []
+	//
+	//for index in range(0, bytes.size(), BYTE_SIZE):
+	//	array.append(from_bytes(bytes.slice(index, index + BYTE_SIZE)))
+	//
+	//return array
 };

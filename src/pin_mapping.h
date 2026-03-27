@@ -65,8 +65,8 @@ struct PinMapping {
   bool is_just_released() const;
   bool is_just_changed() const;
 
-  #define MAPPING_BYTE_SIZE 18U //pin_name, input_type, input_id, input_id, invert, max_report_value, max_report_value, activation_value, activation_value, scale_bits, scale_bits, scale_bits, scale_bits, deadzone, deadzone, change_amount_before_update, quick_release, counter_strafe_help_time_ms
-  void mapping_to_bytes(u_int8_t *&return_buffer) const {
+  #define MAPPING_BYTE_SIZE 17U //pin_name, input_type, input_id, input_id, invert, max_report_value, max_report_value, activation_value, activation_value, scale_bits, scale_bits, scale_bits, scale_bits, deadzone, deadzone, change_amount_before_update, quick_release, counter_strafe_help_time_ms
+  void to_bytes(u_int8_t *&return_buffer) const {
     *return_buffer++ = pin_name;
     *return_buffer++ = input_type;
     *return_buffer++ = input_id >> 8 & 0xFF;
@@ -78,12 +78,12 @@ struct PinMapping {
     *return_buffer++ = activation_value >> 8 & 0xFF;
     *return_buffer++ = activation_value & 0xFF;
     //TODO: this is a float, there might be a better way to store this data.
-    u_int32_t scale_bits = 0;
-    memcpy(&scale_bits, &scale, 4);
-    *return_buffer++ = scale_bits >> 24 & 0xFF;
-    *return_buffer++ = scale_bits >> 16 & 0xFF;
-    *return_buffer++ = scale_bits >> 8 & 0xFF;
-    *return_buffer++ = scale_bits & 0xFF;
+    u_int32_t scale_bytes = 0;
+    memcpy(&scale_bytes, &scale, 4);
+    *return_buffer++ = scale_bytes >> 24 & 0xFF;
+    *return_buffer++ = scale_bytes >> 16 & 0xFF;
+    *return_buffer++ = scale_bytes >> 8 & 0xFF;
+    *return_buffer++ = scale_bytes & 0xFF;
 
     //*return_buffer++ = deadzone >> 8 & 0xFF;
     *return_buffer++ = deadzone;// & 0xFF;
@@ -92,4 +92,36 @@ struct PinMapping {
     *return_buffer++ = quick_release;
     *return_buffer++ = counter_strafe_help_time_ms;
   }
+
+  //TODO
+  //static func from_bytes(bytes : PackedByteArray) -> InputMapping:
+	//if bytes.size() != BYTE_SIZE:
+	//	push_error("Passed byte array does not match the byte size of PinDeclaration.")
+	//
+	//var _pin_name : int = bytes[0]
+	//var _input_type : int = bytes[1]
+	//var _input_id : int = bytes[2] + (bytes[3] << 8)
+	//var _invert : bool = bytes[4]
+	//var _max_report_value : int = (bytes[5] << 8) + bytes[6]
+	//var _activation_value : int = (bytes[7] << 8) + bytes[8]
+	//
+	//var scale_bytes := bytes.slice(9, 13)
+	//scale_bytes.reverse()
+	//var _scale : float = scale_bytes.decode_float(0) #10, 11, 12 #TODO: verify this is correct
+	//var _deadzone : int = bytes[13]
+	//var _change_amount_before_update : int = bytes[14]
+	//var _quick_release : bool = bytes[15]
+	//var _counter_strafe_help_time_ms : int = bytes[16]
+	//
+	//return InputMapping.new(_pin_name, _input_type, _input_id, _invert, _max_report_value,\
+	//_activation_value, _scale, _deadzone, _change_amount_before_update, _quick_release, \
+	//_counter_strafe_help_time_ms)
+  //
+  //static func from_byte_array(bytes : PackedByteArray) -> Array[InputMapping]:
+	//var array : Array[InputMapping] = []
+	//
+	//for index in range(0, bytes.size(), BYTE_SIZE):
+	//	array.append(from_bytes(bytes.slice(index, index + BYTE_SIZE)))
+	//
+	//return array
 };

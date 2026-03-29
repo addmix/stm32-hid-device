@@ -44,7 +44,7 @@ func write(data : PackedByteArray) -> void:
 
 var read_buffer : Array = []
 
-const MINIMUM_MESSAGE_LENGTH = 5
+
 #TODO: replace this logic with a command parser that can more intelligently interpret incoming data
 func _on_data(port: String, data: PackedByteArray) -> void:
 	read_buffer += Array(data)
@@ -54,12 +54,31 @@ func _on_data(port: String, data: PackedByteArray) -> void:
 	
 	parse_command()
 
+#TODO
+#TODO
+#TODO
+#TODO
+#TODO
+#TODO
+#TODO
+#TODO     Create SetConfig function to send entire formatted block of configs to device
+#TODO       Resource -> Bytes -> Device config
+#TODO
+#TODO
+#TODO
+#TODO
+#TODO
+#TODO
+#TODO
+#TODO
+
+
 var read_buffer_index : int = 0
 func parse_command() -> void:
 	read_buffer_index = 0
 	print(read_buffer)
 	
-	if read_buffer.size() < MINIMUM_MESSAGE_LENGTH:
+	if read_buffer.size() < Enums.MINIMUM_MESSAGE_LENGTH:
 		return
 	
 	var read_next_byte : Callable = func read_next_byte() -> int:
@@ -90,7 +109,7 @@ func parse_command() -> void:
 		#return;
 	#}
 	
-	var expected_message_length : int = MINIMUM_MESSAGE_LENGTH + payload_size
+	var expected_message_length : int = Enums.MINIMUM_MESSAGE_LENGTH + payload_size
 	if read_buffer.size() < expected_message_length:
 		print("less than expected length, expected:" , expected_message_length, " actual length:", read_buffer.size())
 		return # stop parsing, but do not clear buffer. When new data is received by the serial manager, the parsing function will run again.

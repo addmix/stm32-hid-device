@@ -51,8 +51,11 @@ void clear_pin(u_int8_t index = 255);
 void clear_mapping(u_int8_t index = 255);
 void clear_augment(u_int8_t index = 255);
 
+#define START_CODE_BYTE_SIZE 2
+#define SECTION_HEADER_BYTE_SIZE 3
 //2 bytes for start code, 2 bytes for payload length, >=1 byte for payload, and 1 byte for checksum
-#define MINIMUM_MESSAGE_LENGTH 5 //this also represents the formatting data of commands, which excludes the payload
+#define MINIMUM_MESSAGE_LENGTH START_CODE_BYTE_SIZE + SECTION_HEADER_BYTE_SIZE //this also represents the formatting data of commands, which excludes the payload
+
 void parse_serial() {
     if (Serial.available() > MINIMUM_MESSAGE_LENGTH) {
         //Serial.println("Parsing serial");
@@ -83,6 +86,22 @@ void create_command(u_int8_t *buffer, u_int8_t command, u_int8_t *data, size_t l
 }
 
 
+void get_configs() {
+    u_int16_t data_length = get_pin_data_size() + SECTION_HEADER_BYTE_SIZE + get_mapping_data_size() + SECTION_HEADER_BYTE_SIZE + get_augment_data_size() + SECTION_HEADER_BYTE_SIZE; //+3 because each data section needs a command byte, and 2 size bytes. the +3 isn't baked into the size functions because those 3 bytes are not considered part of the section payload.
+    u_int8_t data_buffer[data_length];
+    
+    u_int8_t* data_buffer_index = data_buffer;
+    get_pin_data(data_buffer_index);
+    get_mapping_data(data_buffer_index);
+    get_augment_data(data_buffer_index);
+
+    u_int16_t message_length = MINIMUM_MESSAGE_LENGTH + data_length + 1; //+1 for the command byte
+    u_int8_t message_buffer[message_length];
+    create_command(message_buffer, GetConfigs, data_buffer, data_length);
+
+    Serial.write(message_buffer, message_length);
+}
+
 void parse_line() {//receive command
     
     //TODO: this basic command parsing logic should be placed into a dedicated function
@@ -101,6 +120,7 @@ void parse_line() {//receive command
         return;
     }
     #define MAX_PAYLOAD_BUFFER_SIZE 512
+    //TODO can this casting be done differently?
     u_int16_t payload_size = (static_cast<u_int16_t>((u_int8_t) Serial.read()) << 8) | static_cast<u_int16_t>((u_int8_t) Serial.read());
     if (payload_size > MAX_PAYLOAD_BUFFER_SIZE) {
         //If sent message is too big, abort and clear buffer
@@ -151,20 +171,7 @@ void parse_line() {//receive command
             break;
         }
         case GetConfigs: {
-            u_int16_t data_length = get_pin_data_size() + 3 + get_mapping_data_size() + 3 + get_augment_data_size() + 3; //+3 because each data section needs a command byte, and 2 size bytes. the +3 isn't baked into the size functions because those 3 bytes are not considered part of the section payload.
-            u_int8_t data_buffer[data_length];
-
-            //TODO: need to add correct command number to thism
-            u_int8_t* data_buffer_index = data_buffer;
-            get_pin_data(data_buffer_index);
-            get_mapping_data(data_buffer_index);
-            get_augment_data(data_buffer_index);
-
-            u_int16_t message_length = MINIMUM_MESSAGE_LENGTH + data_length + 1; //+1 for the command byte
-            u_int8_t message_buffer[message_length];
-            create_command(message_buffer, GetConfigs, data_buffer, data_length);
-
-            Serial.write(message_buffer, message_length);
+            get_configs();
             break;
         }
         case GetPins: {
@@ -218,43 +225,72 @@ void parse_line() {//receive command
             break;
         }
         case SetConfigs: {
-            break; //TODO
-
-            //print("get configs")
+            Serial.println("set configs");
+            
 			//#TODO: these data_type values aren't actually used by the parser, but they should be.
 			//#right now it only works because both codebases agree on the order
-			//
+			
 			//#PinDeclaration
-			//var data_type : int = read_next_byte.call()
-			//print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
-			//var section_length : int = (read_next_byte.call() << 8) + read_next_byte.call()
-			//print("section length=", section_length)
+			u_int8_t data_type = *message_index++;//var data_type : int = read_next_byte.call()
+			Serial.println("data type=" + (String) data_type);//print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
+			u_int16_t section_length = ((u_int16_t) *message_index++ << 8 ) + (u_int16_t) *message_index++;//var section_length : int = (read_next_byte.call() << 8) + read_next_byte.call()
+			Serial.println("section length=" + (String) section_length); //print("section length=", section_length)
 			//print(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			//var pins : Array[PinDeclaration] = PinDeclaration.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
+			
+            //get expected amount of pin objects to parse
+            u_int8_t objects_to_parse = section_length / Pin::BYTE_SIZE;
+            Pin pin_buffer[objects_to_parse];
+
+            Pin* pin_buffer_index = pin_buffer;
+            Pin::from_byte_array(message_index, pin_buffer_index, objects_to_parse); //var pins : Array[PinDeclaration] = PinDeclaration.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
+
+            //TODO: Print created objects for debugging
 			//print("created pin objects: ", pins)
 			//read_buffer_index += section_length
-			//
+			
+
 			//#InputMapping
-			//data_type = read_next_byte.call()
-			//print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
-			//section_length = (read_next_byte.call() << 8) + read_next_byte.call()
-			//print("section length=", section_length)
+			data_type = *message_index++;//data_type = read_next_byte.call()
+			Serial.println("data type=" + (String) data_type);//print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
+			section_length = ((u_int16_t) *message_index++ << 8 ) + (u_int16_t) *message_index++;//section_length = (read_next_byte.call() << 8) + read_next_byte.call()
+			Serial.println("section length=" + (String) section_length);//print("section length=", section_length)
 			//print(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			//var mappings : Array[InputMapping] = InputMapping.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			//print("created mapping objects: ", mappings)
+			
+            //get expected amount of mapping objects to parse
+            objects_to_parse = section_length / PinMapping::BYTE_SIZE;
+            PinMapping mapping_buffer[objects_to_parse];
+
+            PinMapping* mapping_buffer_index = mapping_buffer;
+            PinMapping::from_byte_array(message_index, mapping_buffer_index, objects_to_parse);//var mappings : Array[InputMapping] = InputMapping.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
+			
+            //TODO: Print created objects for debugging
+            //print("created mapping objects: ", mappings)
 			//read_buffer_index += section_length
-			//
+			
+
 			//#Augmentation
-			//data_type = read_next_byte.call()
-			//print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
-			//section_length = (read_next_byte.call() << 8) + read_next_byte.call()
-			//print("section length=", section_length)
+			data_type = *message_index++;//data_type = read_next_byte.call()
+			Serial.println("data type=" + (String) data_type);//print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
+			section_length = ((u_int16_t) *message_index++ << 8 ) + (u_int16_t) *message_index++;//section_length = (read_next_byte.call() << 8) + read_next_byte.call()
+			Serial.println("section length=" + (String) section_length);//print("section length=", section_length)
 			//print(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			//var augments : Array[Augmentation] = Augmentation.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			//print("created augment objects: ", augments)
+			
+            //get expected amount of augment objects to parse
+            objects_to_parse = section_length / InputAugmentation::BYTE_SIZE;
+            InputAugmentation augment_buffer[objects_to_parse];
+
+            InputAugmentation* augment_buffer_index = augment_buffer;
+            InputAugmentation::from_byte_array(message_index, augment_buffer_index, objects_to_parse);//var augments : Array[Augmentation] = Augmentation.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
+			
+            //TODO: Print created objects for debugging
+            //print("created augment objects: ", augments)
 			//read_buffer_index += section_length
-			//
+			
+
 			//print("remaining bytes in buffer=", read_buffer.slice(read_buffer_index))
+
+            get_configs(); //echo the result back to godot for comparison 
+            break; //TODO
         }
         case SetPins: {
             break; //TODO
@@ -331,8 +367,9 @@ void parse_line() {//receive command
             //syntax: int pin_number, bool analog
             PinName pin = (PinName) *message_index++;
             bool analog = *message_index++;
-            pin_map[pin] = Pin(pin, analog);
-            Serial.println("Added new pin: pin number=" + (String) pin + " analog=" + (String) analog);
+            u_int16_t inactive_value = ((u_int16_t) *message_index++ << 8 ) + (u_int16_t) *message_index++;
+            pin_map[pin] = Pin(pin, analog, inactive_value);
+            Serial.println("Added new pin: pin number=" + (String) pin + " analog=" + (String) analog + " inactive value=" + (String) inactive_value);
             break;
         }
         case InputMapping: {

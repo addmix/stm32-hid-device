@@ -4,7 +4,9 @@
 #define ADC_MAX_VALUE 1024
 #define DEBOUNCE_TICKS_MS 15
 
+#define PIN_BYTE_SIZE 4U //pin number, analog, inactive value, inactive value
 struct Pin {
+    static const u_int8_t BYTE_SIZE = PIN_BYTE_SIZE;
     PinName pin_name = NC;
     bool analog = false;
     u_int16_t inactive_value = HIGH;
@@ -34,7 +36,7 @@ struct Pin {
         return (millis() - last_change_time) <= DEBOUNCE_TICKS_MS;
     }
 
-    #define PIN_BYTE_SIZE 4U //pin number, analog, inactive value, inactive value
+    
     void to_bytes(u_int8_t *&return_buffer) const {
         *return_buffer++ = pin_name;
         *return_buffer++ = analog;
@@ -42,24 +44,22 @@ struct Pin {
         *return_buffer++ = inactive_value & 0xFF;
     }
 
-    //TODO
-    //static func from_bytes(bytes : PackedByteArray) -> PinDeclaration:
-	//if bytes.size() != BYTE_SIZE:
-	//	push_error("Passed byte array does not match the byte size of PinDeclaration.")
-	//
-	//var _pin_name : int = bytes[0]
-	//var _analog : bool = bytes[1]
-	//var _inactive_value : int = (bytes[2] << 8) + bytes[3]
-	//
-	//return PinDeclaration.new(_pin_name, _analog, _inactive_value)
-    //
-    //static func from_byte_array(bytes : PackedByteArray) -> Array[PinDeclaration]:
-	//var array : Array[PinDeclaration] = []
-	//
-	//for index in range(0, bytes.size(), BYTE_SIZE):
-	//	array.append(from_bytes(bytes.slice(index, index + BYTE_SIZE)))
-	//
-	//return array
+    static Pin from_bytes(u_int8_t *&read_buffer) {//static func from_bytes(bytes : PackedByteArray) -> PinDeclaration:
+        //if bytes.size() != BYTE_SIZE:
+        //	push_error("Passed byte array does not match the byte size of PinDeclaration.")
+        
+        PinName pin_name = (PinName) *read_buffer++;//var _pin_name : int = bytes[0]
+        bool analog = *read_buffer++;//var _analog : bool = bytes[1]
+        u_int16_t inactive_value = ((u_int16_t) *read_buffer++ << 8 ) + (u_int16_t) *read_buffer++;//var _inactive_value : int = (bytes[2] << 8) + bytes[3]
+        
+        return Pin(pin_name, analog, inactive_value);//return PinDeclaration.new(_pin_name, _analog, _inactive_value)
+    }
+
+    static void from_byte_array(u_int8_t *&read_buffer, Pin *&return_buffer, u_int16_t items_to_parse) {//static func from_byte_array(bytes : PackedByteArray) -> Array[PinDeclaration]:
+        for (size_t i = 0; i < items_to_parse; ++i) {
+            *return_buffer++ = from_bytes(read_buffer);
+        }
+    }
 };
 
 extern std::map<uint, Pin> pin_map;

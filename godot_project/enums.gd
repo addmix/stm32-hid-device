@@ -1,5 +1,9 @@
 class_name Enums
 
+const MINIMUM_MESSAGE_LENGTH = SERIAL_HEADER_BYTE_SIZE + SECTION_HEADER_BYTE_SIZE
+const SERIAL_HEADER_BYTE_SIZE = 2 #refers to the first bits of a serial message (0xFF, 0x00)
+const SECTION_HEADER_BYTE_SIZE = 3 #refers to the command header (command byte, 2 section size bytes)
+
 static func value_to_key(_enum : Dictionary, value : Variant) -> Variant:
 	var index : int = _enum.values().find(value)
 	if index == -1:

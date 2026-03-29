@@ -72,6 +72,6 @@ std::vector<PinMapping> pin_bindings = {
 };
 
 std::vector<InputAugmentation> augmentations = {
-  InputAugmentation::rotation(PA_0, PA_1, radians(-0.0f)),
-  InputAugmentation::rotation(PA_1, PA_0, radians(-0.0f)),
+  InputAugmentation::rotation(PA_0, PA_1, ROTATION, radians(-0.0f)),
+  InputAugmentation::rotation(PA_1, PA_0, ROTATION, radians(-0.0f)),
 };

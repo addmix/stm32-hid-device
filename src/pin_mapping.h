@@ -97,6 +97,22 @@ struct PinMapping {
   bool is_just_changed() const;
 
   
+  void print() {
+    Serial.println(
+    "pin number=" + (String) pin_name + 
+    " input device=" + (String) input_type +
+    " input id=" + (String) input_id +
+    " inverted=" + (String) invert +
+    " max report value=" + (String) max_report_value +
+    " activation value=" + (String) activation_value +
+    " scale=" + (String) scale +
+    " deadzone=" + (String) deadzone +
+    " change amount before update=" + (String) change_amount_before_update +
+    " quick release=" + (String) quick_release +
+    " counter strafe help time ms=" + (String) counter_strafe_help_time_ms
+    );
+  }
+
   void to_bytes(u_int8_t *&return_buffer) const {
     *return_buffer++ = pin_name;
     *return_buffer++ = input_type;
@@ -144,7 +160,7 @@ struct PinMapping {
     //var _scale : float = scale_bytes.decode_float(0) #10, 11, 12 #TODO: verify this is correct
 
     u_int8_t deadzone = *read_buffer++;//var _deadzone : int = bytes[13]
-    u_int16_t change_amount_before_update = ((u_int16_t) *read_buffer++ << 8 ) + (u_int16_t) *read_buffer++;//var _change_amount_before_update : int = bytes[14]
+    u_int16_t change_amount_before_update = /*((u_int16_t) *read_buffer++ << 8 ) +*/ (u_int16_t) *read_buffer++;//var _change_amount_before_update : int = bytes[14]
     bool quick_release = *read_buffer++;//var _quick_release : bool = bytes[15]
     u_int8_t counter_strafe_help_time_ms = *read_buffer++;//var _counter_strafe_help_time_ms : int = bytes[16]
     

@@ -1,18 +1,11 @@
 [gd_scene format=3 uid="uid://bfavp6t0uojhy"]
 
+[ext_resource type="Theme" uid="uid://dh4p4tac0rpu7" path="res://theme.tres" id="1_7mycd"]
 [ext_resource type="Script" uid="uid://iybkkne7rxrw" path="res://main.gd" id="1_ig7tw"]
-
-[sub_resource type="SystemFont" id="SystemFont_ig7tw"]
-font_names = PackedStringArray("Monospace")
-font_weight = 999
-
-[sub_resource type="Theme" id="Theme_0xm2m"]
-Control/fonts/font = SubResource("SystemFont_ig7tw")
-LineEdit/constants/minimum_character_width = 4
-MarginContainer/constants/margin_bottom = 8
-MarginContainer/constants/margin_left = 8
-MarginContainer/constants/margin_right = 8
-MarginContainer/constants/margin_top = 8
+[ext_resource type="Script" uid="uid://u7skob8fd4a4" path="res://structs/augmentation.gd" id="2_lquwl"]
+[ext_resource type="Script" uid="uid://xwpnryfeckix" path="res://structs/input_mapping.gd" id="3_7mycd"]
+[ext_resource type="Script" uid="uid://cbyrawfxuoa0k" path="res://structs/pin_declaration.gd" id="4_272bh"]
+[ext_resource type="Script" uid="uid://d1x5k5i6sivu6" path="res://structs/config.gd" id="5_5vw27"]
 
 [sub_resource type="GDScript" id="GDScript_ig7tw"]
 script/source = "extends Button
@@ -141,6 +134,55 @@ func _on_delete_augments_button_pressed() -> void:
 	reset()
 "
 
+[sub_resource type="GDScript" id="GDScript_4c57u"]
+script/source = "extends HBoxContainer
+
+@export var config : Config = Config.new()
+
+func _on_set_configs_pressed() -> void:
+	print(\"set configs\")
+	var data_buffer := PackedByteArray()#u_int8_t data_buffer[data_length];
+	
+	data_buffer += config.get_pin_data()
+	data_buffer += config.get_mapping_data() #get_mapping_data(data_buffer_index);
+	data_buffer += config.get_augment_data() #get_augment_data(data_buffer_index);
+	
+	print(\"data buffer \", data_buffer)
+	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.SetConfigs, data_buffer))
+"
+
+[sub_resource type="Resource" id="Resource_7mycd"]
+script = ExtResource("2_lquwl")
+pin = 1
+secondary_pin = 0
+type = 1
+metadata/_custom_type_script = "uid://u7skob8fd4a4"
+
+[sub_resource type="Resource" id="Resource_lquwl"]
+script = ExtResource("3_7mycd")
+pin_name = 1
+input_type = 1
+input_id = 30
+scale = 0.5
+deadzone = null
+change_amount_before_update = null
+metadata/_custom_type_script = "uid://xwpnryfeckix"
+
+[sub_resource type="Resource" id="Resource_272bh"]
+script = ExtResource("4_272bh")
+pin_name = 1
+analog = true
+metadata/_custom_type_script = "uid://cbyrawfxuoa0k"
+
+[sub_resource type="Resource" id="Resource_kek77"]
+script = ExtResource("5_5vw27")
+pin_map = Dictionary[int, ExtResource("4_272bh")]({
+1: SubResource("Resource_272bh")
+})
+pin_bindings = Array[ExtResource("3_7mycd")]([SubResource("Resource_lquwl")])
+augmentations = Array[ExtResource("2_lquwl")]([SubResource("Resource_7mycd")])
+metadata/_custom_type_script = "uid://d1x5k5i6sivu6"
+
 [node name="Main" type="MarginContainer" unique_id=1401305772]
 anchors_preset = 15
 anchor_right = 1.0
@@ -149,7 +191,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme = SubResource("Theme_0xm2m")
+theme = ExtResource("1_7mycd")
 script = ExtResource("1_ig7tw")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1741309776]
@@ -451,6 +493,17 @@ layout_mode = 2
 tooltip_text = "Deletes the augment at the specified index."
 text = "Delete Augments"
 
+[node name="SetConfigs" type="HBoxContainer" parent="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer" unique_id=650260053]
+layout_mode = 2
+script = SubResource("GDScript_4c57u")
+config = SubResource("Resource_kek77")
+
+[node name="SetConfigs" type="Button" parent="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/SetConfigs" unique_id=1133957949]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+tooltip_text = "Deletes the configs on the device (pins, input mappings, augmentations)"
+text = "SetConfigs"
+
 [connection signal="pressed" from="VBoxContainer/SerialOutput/VBoxContainer/ClearButton" to="VBoxContainer/SerialOutput/VBoxContainer/ClearButton" method="_on_pressed"]
 [connection signal="pressed" from="VBoxContainer/SerialOutput/VBoxContainer/ResetButton" to="VBoxContainer/SerialOutput/VBoxContainer/ResetButton" method="_on_pressed"]
 [connection signal="pressed" from="VBoxContainer/SerialOutput/VBoxContainer/Disconnect" to="VBoxContainer/SerialOutput/VBoxContainer/Disconnect" method="_on_pressed"]
@@ -470,3 +523,4 @@ text = "Delete Augments"
 [connection signal="pressed" from="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/DeleteConfigs/DeletePinsButton" to="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/DeleteConfigs" method="_on_delete_pins_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/DeleteConfigs/DeleteMappingsButton" to="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/DeleteConfigs" method="_on_delete_mappings_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/DeleteConfigs/DeleteAugmentsButton" to="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/DeleteConfigs" method="_on_delete_augments_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/SetConfigs/SetConfigs" to="VBoxContainer/FoldableContainer/ScrollContainer/VBoxContainer/SetConfigs" method="_on_set_configs_pressed"]

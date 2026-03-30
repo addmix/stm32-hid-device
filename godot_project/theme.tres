@@ -1,0 +1,15 @@
+[gd_resource type="Theme" format=3 uid="uid://dh4p4tac0rpu7"]
+
+[sub_resource type="SystemFont" id="SystemFont_ig7tw"]
+font_names = PackedStringArray("Monospace")
+font_weight = 999
+
+[resource]
+Control/fonts/font = SubResource("SystemFont_ig7tw")
+HBoxContainer/constants/separation = 12
+LineEdit/constants/minimum_character_width = 4
+MarginContainer/constants/margin_bottom = 12
+MarginContainer/constants/margin_left = 12
+MarginContainer/constants/margin_right = 12
+MarginContainer/constants/margin_top = 12
+VBoxContainer/constants/separation = 12

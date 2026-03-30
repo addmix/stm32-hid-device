@@ -76,7 +76,7 @@ func _on_data(port: String, data: PackedByteArray) -> void:
 var read_buffer_index : int = 0
 func parse_command() -> void:
 	read_buffer_index = 0
-	print(read_buffer)
+	print("read buffer ", read_buffer)
 	
 	if read_buffer.size() < Enums.MINIMUM_MESSAGE_LENGTH:
 		return
@@ -133,7 +133,11 @@ func parse_command() -> void:
 	
 	var command : int = read_next_byte.call();
 	match command:
+		Enums.Commands.SetConfigs:
+			pass #the device might echo back some info, idk.
+			
 		Enums.Commands.GetConfigs: #device is returning all configs
+			#receive config data from device
 			print("get configs")
 			#TODO: these data_type values aren't actually used by the parser, but they should be.
 			#right now it only works because both codebases agree on the order

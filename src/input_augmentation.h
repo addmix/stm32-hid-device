@@ -57,7 +57,14 @@ struct InputAugmentation {
         }
     }
 
-    
+    void print() {
+        Serial.println(
+        "pin number=" + (String) pin +
+        " secondary pin number=" + (String) secondary_pin +
+        " type=" + (String) type +
+        " rotation=" + (String) control_rotation
+        );
+    }
     
     void to_bytes(u_int8_t *&return_buffer) const {
         *return_buffer++ = pin;

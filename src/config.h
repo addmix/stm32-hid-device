@@ -75,3 +75,18 @@ std::vector<InputAugmentation> augmentations = {
   InputAugmentation::rotation(PA_0, PA_1, ROTATION, radians(-0.0f)),
   InputAugmentation::rotation(PA_1, PA_0, ROTATION, radians(-0.0f)),
 };
+
+//TODO remove these duplicate defines
+#define START_CODE_BYTE_SIZE 2
+#define SECTION_HEADER_BYTE_SIZE 3
+//2 bytes for start code, 2 bytes for payload length, >=1 byte for payload, and 1 byte for checksum
+#define MINIMUM_MESSAGE_LENGTH START_CODE_BYTE_SIZE + SECTION_HEADER_BYTE_SIZE //this also represents the formatting data of commands, which excludes the payload
+
+
+u_int16_t get_pin_data_size(u_int8_t index = 255);
+u_int16_t get_mapping_data_size(u_int8_t index = 255);
+u_int16_t get_augment_data_size(u_int8_t index = 255);
+
+u_int16_t get_config_data_size() {
+  return get_pin_data_size() + SECTION_HEADER_BYTE_SIZE + get_mapping_data_size() + SECTION_HEADER_BYTE_SIZE + get_augment_data_size() + SECTION_HEADER_BYTE_SIZE;
+}

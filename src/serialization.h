@@ -34,11 +34,11 @@ enum Commands{
 void parse_serial();
 void parse_line();
 
-u_int16_t get_pin_data_size(u_int8_t index = 255);
+u_int16_t get_pin_data_size(u_int8_t index);
 void get_pin_data(u_int8_t*& return_buffer, u_int8_t index = 255);
-u_int16_t get_mapping_data_size(u_int8_t index = 255);
+u_int16_t get_mapping_data_size(u_int8_t index);
 void get_mapping_data(u_int8_t*& return_buffer, u_int8_t index = 255);
-u_int16_t get_augment_data_size(u_int8_t index = 255);
+u_int16_t get_augment_data_size(u_int8_t index);
 void get_augment_data(u_int8_t*& return_buffer, u_int8_t index = 255);
 
 void print_pins(u_int8_t index = 255);
@@ -87,7 +87,7 @@ void create_command(u_int8_t *buffer, u_int8_t command, u_int8_t *data, size_t l
 
 
 void get_configs() {
-    u_int16_t data_length = get_pin_data_size() + SECTION_HEADER_BYTE_SIZE + get_mapping_data_size() + SECTION_HEADER_BYTE_SIZE + get_augment_data_size() + SECTION_HEADER_BYTE_SIZE; //+3 because each data section needs a command byte, and 2 size bytes. the +3 isn't baked into the size functions because those 3 bytes are not considered part of the section payload.
+    u_int16_t data_length = get_config_data_size(); //+3 because each data section needs a command byte, and 2 size bytes. the +3 isn't baked into the size functions because those 3 bytes are not considered part of the section payload.
     u_int8_t data_buffer[data_length];
     
     u_int8_t* data_buffer_index = data_buffer;
@@ -171,6 +171,7 @@ void parse_line() {//receive command
             break;
         }
         case GetConfigs: {
+            //return config data to godot app
             get_configs();
             break;
         }
@@ -225,7 +226,9 @@ void parse_line() {//receive command
             break;
         }
         case SetConfigs: {
+            //receive config data from godot app
             Serial.println("set configs");
+            
             
 			//#TODO: these data_type values aren't actually used by the parser, but they should be.
 			//#right now it only works because both codebases agree on the order
@@ -244,9 +247,14 @@ void parse_line() {//receive command
             Pin* pin_buffer_index = pin_buffer;
             Pin::from_byte_array(message_index, pin_buffer_index, objects_to_parse); //var pins : Array[PinDeclaration] = PinDeclaration.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
 
-            //TODO: Print created objects for debugging
-			//print("created pin objects: ", pins)
-			//read_buffer_index += section_length
+            clear_pin();
+
+            Pin* pin_buffer_print_index = pin_buffer;
+            for(size_t i = 0; i < objects_to_parse; ++i) {
+                pin_map.insert({pin_buffer_print_index->pin_name, *pin_buffer_print_index});
+                //pin_buffer_print_index->print();
+                //pin_buffer_print_index++;
+            }
 			
 
 			//#InputMapping
@@ -263,11 +271,15 @@ void parse_line() {//receive command
             PinMapping* mapping_buffer_index = mapping_buffer;
             PinMapping::from_byte_array(message_index, mapping_buffer_index, objects_to_parse);//var mappings : Array[InputMapping] = InputMapping.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
 			
-            //TODO: Print created objects for debugging
-            //print("created mapping objects: ", mappings)
-			//read_buffer_index += section_length
-			
+            clear_mapping();
 
+            PinMapping* mapping_buffer_print_index = mapping_buffer;
+            for(size_t i = 0; i < objects_to_parse; ++i) {
+                pin_bindings.push_back(*mapping_buffer_print_index);
+                //mapping_buffer_print_index->print();
+                //mapping_buffer_print_index++;
+            }
+            
 			//#Augmentation
 			data_type = *message_index++;//data_type = read_next_byte.call()
 			Serial.println("data type=" + (String) data_type);//print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
@@ -282,13 +294,19 @@ void parse_line() {//receive command
             InputAugmentation* augment_buffer_index = augment_buffer;
             InputAugmentation::from_byte_array(message_index, augment_buffer_index, objects_to_parse);//var augments : Array[Augmentation] = Augmentation.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
 			
-            //TODO: Print created objects for debugging
-            //print("created augment objects: ", augments)
-			//read_buffer_index += section_length
+            clear_augment();
+
+            InputAugmentation* augment_buffer_print_index = augment_buffer;
+            for(size_t i = 0; i < objects_to_parse; ++i) {
+                augmentations.push_back(*augment_buffer_print_index);
+                //augment_buffer_print_index->print();
+                //augment_buffer_print_index++;
+            }
 			
 
 			//print("remaining bytes in buffer=", read_buffer.slice(read_buffer_index))
 
+            delay(10);
             get_configs(); //echo the result back to godot for comparison 
             break; //TODO
         }
@@ -538,10 +556,8 @@ void print_pin(u_int8_t index) {
 
     Pin& pin = it->second;
 
-    Serial.println((String) index + 
-    ": pin number=" + (String) pin.pin_name + 
-    " analog=" + (String) pin.analog 
-    );
+    Serial.print((String) index + ": ");
+    pin.print();
 }
 
 void print_mappings(u_int8_t index) {
@@ -561,19 +577,8 @@ void print_mapping(u_int8_t index) {
     }
     PinMapping& mapping = pin_bindings[index];
 
-    Serial.println((String) index + 
-    ": pin number=" + (String) mapping.pin_name + 
-    " input device=" + (String) mapping.input_type +
-    " input id=" + (String) mapping.input_id +
-    " inverted=" + (String) mapping.invert +
-    " max report value=" + (String) mapping.max_report_value +
-    " activation value=" + (String) mapping.activation_value +
-    " scale=" + (String) mapping.scale +
-    " deadzone=" + (String) mapping.deadzone +
-    " change amount before update=" + (String) mapping.change_amount_before_update +
-    " quick release=" + (String) mapping.quick_release +
-    " counter strafe help time ms=" + (String) mapping.counter_strafe_help_time_ms
-    );
+    Serial.print((String) index + ": ");
+    mapping.print();
 }
 
 void print_augments(u_int8_t index) {
@@ -593,12 +598,8 @@ void print_augment(u_int8_t index) {
     }
     InputAugmentation& augment = augmentations[index];
     
-    Serial.println((String) index + 
-    ": pin number=" + (String) augment.pin +
-    " secondary pin number=" + (String) augment.secondary_pin +
-    " type=" + (String) augment.type +
-    " rotation=" + (String) augment.control_rotation
-    );
+    Serial.print((String) index + ": ");
+    augment.print();
 }
 
 

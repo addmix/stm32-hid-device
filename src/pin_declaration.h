@@ -36,6 +36,13 @@ struct Pin {
         return (millis() - last_change_time) <= DEBOUNCE_TICKS_MS;
     }
 
+    void print() {
+        Serial.println(
+            "pin number=" + (String) pin_name + 
+            " analog=" + (String) analog +
+            " inactive value=" + (String) inactive_value
+        );
+    }
     
     void to_bytes(u_int8_t *&return_buffer) const {
         *return_buffer++ = pin_name;

@@ -1,0 +1,162 @@
+[gd_scene format=3 uid="uid://ctjp465rpd8bf"]
+
+[node name="ButtonEditor" type="PanelContainer" unique_id=1381128869]
+z_index = 10
+offset_right = 762.0
+offset_bottom = 222.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=694534007]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer" unique_id=1789884886]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/Header" unique_id=716254038]
+layout_mode = 2
+text = "Edit Button:"
+
+[node name="Label2" type="Label" parent="VBoxContainer/Header" unique_id=1674499286]
+layout_mode = 2
+text = "%s Button name"
+
+[node name="Pin" type="VBoxContainer" parent="VBoxContainer" unique_id=874268485]
+layout_mode = 2
+
+[node name="AddPinForm" type="HBoxContainer" parent="VBoxContainer/Pin" unique_id=516674377]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="VBoxContainer/Pin/AddPinForm" unique_id=992614332]
+layout_mode = 2
+text = "Pin:"
+
+[node name="PinLabel" type="Label" parent="VBoxContainer/Pin/AddPinForm" unique_id=670036054]
+layout_mode = 2
+text = "Pin Number:"
+
+[node name="Pin" type="LineEdit" parent="VBoxContainer/Pin/AddPinForm" unique_id=1970151985]
+layout_mode = 2
+tooltip_text = "Pin to be added.
+Pin can be formatted as raw number 1, 2, 3... or formatted with the bank A1, A2, B5, B6..."
+max_length = 3
+
+[node name="Analog" type="CheckBox" parent="VBoxContainer/Pin/AddPinForm" unique_id=1050828016]
+layout_mode = 2
+tooltip_text = "When enabled, the created pin will be read as analog.
+Only works on pins on bank A_"
+text = "Analog"
+
+[node name="Label" type="Label" parent="VBoxContainer/Pin/AddPinForm" unique_id=246832000]
+layout_mode = 2
+text = "Inactive value:"
+
+[node name="SpinBox" type="SpinBox" parent="VBoxContainer/Pin/AddPinForm" unique_id=1769412519]
+layout_mode = 2
+
+[node name="InputMapping" type="VBoxContainer" parent="VBoxContainer" unique_id=1692611393]
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/InputMapping" unique_id=679744642]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/InputMapping" unique_id=330673452]
+visible = false
+layout_mode = 2
+text = "Input Mappings:"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/InputMapping" unique_id=1909497532]
+layout_mode = 2
+
+[node name="PinLabel" type="Label" parent="VBoxContainer/InputMapping/HBoxContainer" unique_id=836594596]
+layout_mode = 2
+text = "Pin:"
+
+[node name="Pin" type="LineEdit" parent="VBoxContainer/InputMapping/HBoxContainer" unique_id=1086414796]
+layout_mode = 2
+tooltip_text = "Pin to be used for this input mapping.
+Pin can be formatted as raw number 1, 2, 3... or formatted with the bank A1, A2, B5, B6..."
+max_length = 3
+
+[node name="ReportDeviceLabel" type="Label" parent="VBoxContainer/InputMapping/HBoxContainer" unique_id=463213223]
+layout_mode = 2
+text = "Report device:"
+
+[node name="ReportDevice" type="OptionButton" parent="VBoxContainer/InputMapping/HBoxContainer" unique_id=2132355807]
+layout_mode = 2
+tooltip_text = "The type of report device that this input will be interpreted as."
+item_count = 6
+popup/item_0/text = "Keyboard"
+popup/item_0/id = 1
+popup/item_1/text = "Mouse"
+popup/item_1/id = 2
+popup/item_2/text = "Gamepad"
+popup/item_2/id = 3
+popup/item_3/text = "Gamepad Button"
+popup/item_3/id = 4
+popup/item_4/text = "Gamepad Hat"
+popup/item_4/id = 5
+popup/item_5/text = "Gamepad Axis"
+popup/item_5/id = 6
+
+[node name="InputIDLabel" type="Label" parent="VBoxContainer/InputMapping/HBoxContainer" unique_id=446787840]
+layout_mode = 2
+text = "Input ID:"
+
+[node name="InputID" type="LineEdit" parent="VBoxContainer/InputMapping/HBoxContainer" unique_id=931506702]
+layout_mode = 2
+tooltip_text = "The input identifier for this mapping.
+See: Enums
+Examples: 
+Keyboard: HID_KEY_A, HID_KEY_B...
+Mouse: MOUSE_BUTTON_LEFT, SCROLL_DOWN, MOUSE_LEFT...
+Gamepad: GAMEPAD_BUTTON_3, GAMEPAD_BUTTON_X, GAMEPAD_LEFT_TRIGGER..."
+theme_override_constants/minimum_character_width = 13
+
+[node name="Inverted" type="CheckBox" parent="VBoxContainer/InputMapping/HBoxContainer" unique_id=876079710]
+layout_mode = 2
+tooltip_text = "Whether this input mapping should be interpreted as negative.
+Note: This is not the same as the Pin's inactive value setting."
+text = "Inverted"
+
+[node name="FoldableContainer" type="FoldableContainer" parent="VBoxContainer/InputMapping" unique_id=1413258229]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/InputMapping/FoldableContainer" unique_id=643205031]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/InputMapping/FoldableContainer/VBoxContainer" unique_id=1023318319]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/InputMapping/FoldableContainer/VBoxContainer/HBoxContainer" unique_id=1717077462]
+layout_mode = 2
+text = "max report value"
+
+[node name="Label2" type="Label" parent="VBoxContainer/InputMapping/FoldableContainer/VBoxContainer/HBoxContainer" unique_id=1478483758]
+layout_mode = 2
+text = "activation value"
+
+[node name="Label3" type="Label" parent="VBoxContainer/InputMapping/FoldableContainer/VBoxContainer/HBoxContainer" unique_id=465824606]
+layout_mode = 2
+text = "scale"
+
+[node name="Label4" type="Label" parent="VBoxContainer/InputMapping/FoldableContainer/VBoxContainer/HBoxContainer" unique_id=906622632]
+layout_mode = 2
+text = "deadzone"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer/InputMapping/FoldableContainer/VBoxContainer" unique_id=1339308963]
+layout_mode = 2
+
+[node name="Label5" type="Label" parent="VBoxContainer/InputMapping/FoldableContainer/VBoxContainer/HBoxContainer2" unique_id=753122309]
+layout_mode = 2
+text = "change amount before update"
+
+[node name="Label6" type="Label" parent="VBoxContainer/InputMapping/FoldableContainer/VBoxContainer/HBoxContainer2" unique_id=565666417]
+layout_mode = 2
+text = "quick release"
+
+[node name="Label7" type="Label" parent="VBoxContainer/InputMapping/FoldableContainer/VBoxContainer/HBoxContainer2" unique_id=1481205133]
+layout_mode = 2
+text = "counter strafe help time"
+
+[node name="AddInput" type="Button" parent="VBoxContainer" unique_id=1448147488]
+layout_mode = 2
+text = "Add Input"

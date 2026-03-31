@@ -34,45 +34,15 @@ layout_mode = 2
 [node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer" unique_id=1123647866]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1302573652]
+[node name="Label" type="Label" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=671891426]
 layout_mode = 2
 text = "Pinky"
 
-[node name="Button" type="VBoxContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=407476595]
+[node name="Button1" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1075496595]
 layout_mode = 2
+text = "Tip
 
-[node name="Label" type="Label" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Button" unique_id=1172001555]
-layout_mode = 2
-text = "Tip"
-
-[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Button" unique_id=289842118]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Button/HBoxContainer" unique_id=1175190386]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Pin:"
-
-[node name="LineEdit" type="LineEdit" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Button/HBoxContainer" unique_id=1292083208]
-layout_mode = 2
-size_flags_horizontal = 3
-placeholder_text = "A5"
-max_length = 3
-
-[node name="HBoxContainer2" type="HBoxContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Button" unique_id=1765523609]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Button/HBoxContainer2" unique_id=2044267377]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 8.34
-text = "Device:"
-
-[node name="LineEdit" type="LineEdit" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Button/HBoxContainer2" unique_id=912523661]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/minimum_character_width = 9
-placeholder_text = "Keyboard"
+"
 
 [node name="Button2" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=229876552]
 layout_mode = 2

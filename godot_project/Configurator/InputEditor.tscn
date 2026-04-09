@@ -1,12 +1,20 @@
 [gd_scene format=3 uid="uid://ctjp465rpd8bf"]
 
-[node name="ButtonEditor" type="PanelContainer" unique_id=1381128869]
-z_index = 10
-offset_right = 762.0
-offset_bottom = 222.0
+[node name="InputEditor" type="PopupPanel" unique_id=1198437680]
+oversampling_override = 1.0
+size = Vector2i(665, 195)
+visible = true
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=694534007]
-layout_mode = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Header" type="HBoxContainer" parent="VBoxContainer" unique_id=1789884886]
 layout_mode = 2
@@ -20,6 +28,7 @@ layout_mode = 2
 text = "%s Button name"
 
 [node name="Pin" type="VBoxContainer" parent="VBoxContainer" unique_id=874268485]
+visible = false
 layout_mode = 2
 
 [node name="AddPinForm" type="HBoxContainer" parent="VBoxContainer/Pin" unique_id=516674377]
@@ -67,10 +76,12 @@ text = "Input Mappings:"
 layout_mode = 2
 
 [node name="PinLabel" type="Label" parent="VBoxContainer/InputMapping/HBoxContainer" unique_id=836594596]
+visible = false
 layout_mode = 2
 text = "Pin:"
 
 [node name="Pin" type="LineEdit" parent="VBoxContainer/InputMapping/HBoxContainer" unique_id=1086414796]
+visible = false
 layout_mode = 2
 tooltip_text = "Pin to be used for this input mapping.
 Pin can be formatted as raw number 1, 2, 3... or formatted with the bank A1, A2, B5, B6..."

@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://df7ocw7qm07sf"]
+
+[ext_resource type="Script" uid="uid://bnn1iq31w2ak6" path="res://Configurator/pin_editor.gd" id="1_jtu0x"]
+
+[node name="PinEditor" type="PopupPanel" unique_id=1569873255]
+oversampling_override = 1.0
+size = Vector2i(503, 66)
+visible = true
+script = ExtResource("1_jtu0x")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=388766282]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Header" type="HBoxContainer" parent="VBoxContainer" unique_id=1216424623]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/Header" unique_id=863367918]
+layout_mode = 2
+text = "Edit Button:"
+
+[node name="Label2" type="Label" parent="VBoxContainer/Header" unique_id=106942808]
+layout_mode = 2
+text = "%s Button name"
+
+[node name="Pin" type="VBoxContainer" parent="VBoxContainer" unique_id=791230523]
+layout_mode = 2
+
+[node name="AddPinForm" type="HBoxContainer" parent="VBoxContainer/Pin" unique_id=854294866]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="VBoxContainer/Pin/AddPinForm" unique_id=146981529]
+layout_mode = 2
+text = "Pin:"
+
+[node name="PinLabel" type="Label" parent="VBoxContainer/Pin/AddPinForm" unique_id=600814501]
+layout_mode = 2
+text = "Pin Number:"
+
+[node name="PinInput" type="LineEdit" parent="VBoxContainer/Pin/AddPinForm" unique_id=634754987]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Pin to be added.
+Pin can be formatted as raw number 1, 2, 3... or formatted with the bank A1, A2, B5, B6..."
+max_length = 3
+
+[node name="AnalogInput" type="CheckBox" parent="VBoxContainer/Pin/AddPinForm" unique_id=333587323]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "When enabled, the created pin will be read as analog.
+Only works on pins on bank A_"
+text = "Analog"
+
+[node name="Label" type="Label" parent="VBoxContainer/Pin/AddPinForm" unique_id=1456293593]
+layout_mode = 2
+text = "Inactive value:"
+
+[node name="InactiveValueInput" type="SpinBox" parent="VBoxContainer/Pin/AddPinForm" unique_id=1113164997]
+unique_name_in_owner = true
+layout_mode = 2

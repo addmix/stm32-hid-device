@@ -4,14 +4,23 @@ class_name Config
 @export var pin_map : Dictionary[int, PinDeclaration] = {
 	
 }
+func add_pin(pin : PinDeclaration) -> void:
+	pin_map[pin.pin_name] = pin
 
 @export var pin_bindings : Array[InputMapping] = [
 	
 ]
+func add_input_mapping(binding : InputMapping) -> void:
+	pin_bindings.append(binding)
+func add_input_mappings(bindings : Array[InputMapping]) -> void:
+	pin_bindings += bindings
+
 
 @export var augmentations : Array[Augmentation] = [
 	
 ]
+func add_augmentation(aug : Augmentation) -> void:
+	augmentations.append(aug)
 
 func get_data_size() -> int:
 	return Enums.SECTION_HEADER_BYTE_SIZE + get_pin_data_size() + Enums.SECTION_HEADER_BYTE_SIZE + get_mapping_data_size() + Enums.SECTION_HEADER_BYTE_SIZE + get_augment_data_size();

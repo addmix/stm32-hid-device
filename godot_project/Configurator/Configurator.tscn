@@ -1,9 +1,20 @@
 [gd_scene format=3 uid="uid://c7otkv26auj40"]
 
 [ext_resource type="Theme" uid="uid://dh4p4tac0rpu7" path="res://theme.tres" id="1_5ps1h"]
+[ext_resource type="Script" uid="uid://f6orq33rkxm5" path="res://Configurator/pin_button.gd" id="2_1wg4m"]
 
 [sub_resource type="GDScript" id="GDScript_i1jgh"]
 script/source = "extends MarginContainer
+
+
+func build_config_from_editor() -> Config:
+	var config := Config.new()
+	
+	for pin_button : PinButton in NodeUtils.get_descendants_of_type(self, PinButton):
+		config.add_pin(pin_button.pin)
+		config.add_input_mappings(pin_button.input_mappings)
+	
+	return config
 "
 
 [node name="Configurator" type="MarginContainer" unique_id=954300310]
@@ -27,6 +38,7 @@ layout_mode = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="HBoxContainer/CenterContainer/HBoxContainer" unique_id=1050465495]
 layout_mode = 2
+size_flags_vertical = 0
 
 [node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer" unique_id=1774675657]
 layout_mode = 2
@@ -43,20 +55,187 @@ layout_mode = 2
 text = "Tip
 
 "
+script = ExtResource("2_1wg4m")
 
-[node name="Button2" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=229876552]
+[node name="Button2" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=429318590]
 layout_mode = 2
 text = "Rest
+
 "
+script = ExtResource("2_1wg4m")
 
-[node name="Button3" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1540208162]
+[node name="Button3" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1353554127]
 layout_mode = 2
-text = "Inner"
+text = "Inner
 
-[node name="Button4" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1908257799]
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button4" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=205386596]
 layout_mode = 2
 text = "Pad
+
 "
+script = ExtResource("2_1wg4m")
+
+[node name="PanelContainer2" type="PanelContainer" parent="HBoxContainer/CenterContainer/HBoxContainer" unique_id=302682643]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer2" unique_id=788969586]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer2/MarginContainer" unique_id=2096680407]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer" unique_id=266969454]
+layout_mode = 2
+text = "Ring"
+
+[node name="Button1" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer" unique_id=1722188029]
+layout_mode = 2
+text = "Tip
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button2" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer" unique_id=298704320]
+layout_mode = 2
+text = "Rest
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button3" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer" unique_id=1819380166]
+layout_mode = 2
+text = "Inner
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button4" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer2/MarginContainer/VBoxContainer" unique_id=2134456810]
+layout_mode = 2
+text = "Pad
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="PanelContainer3" type="PanelContainer" parent="HBoxContainer/CenterContainer/HBoxContainer" unique_id=907245844]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer3" unique_id=1713210455]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer3/MarginContainer" unique_id=2135871678]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer3/MarginContainer/VBoxContainer" unique_id=2056812360]
+layout_mode = 2
+text = "Middle"
+
+[node name="Button1" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer3/MarginContainer/VBoxContainer" unique_id=55561656]
+layout_mode = 2
+text = "Tip
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button2" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer3/MarginContainer/VBoxContainer" unique_id=995121430]
+layout_mode = 2
+text = "Rest
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button3" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer3/MarginContainer/VBoxContainer" unique_id=1925988381]
+layout_mode = 2
+text = "Inner
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button4" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer3/MarginContainer/VBoxContainer" unique_id=2114358282]
+layout_mode = 2
+text = "Pad
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="PanelContainer4" type="PanelContainer" parent="HBoxContainer/CenterContainer/HBoxContainer" unique_id=1733851430]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer4" unique_id=1120632761]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer4/MarginContainer" unique_id=1073992873]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer4/MarginContainer/VBoxContainer" unique_id=1439296427]
+layout_mode = 2
+text = "Index"
+
+[node name="Button1" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer4/MarginContainer/VBoxContainer" unique_id=547524051]
+layout_mode = 2
+text = "Tip
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button2" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer4/MarginContainer/VBoxContainer" unique_id=853672297]
+layout_mode = 2
+text = "Rest
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button3" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer4/MarginContainer/VBoxContainer" unique_id=423577554]
+layout_mode = 2
+text = "Inner
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button4" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer4/MarginContainer/VBoxContainer" unique_id=1140755886]
+layout_mode = 2
+text = "Pad
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="PanelContainer5" type="PanelContainer" parent="HBoxContainer/CenterContainer/HBoxContainer" unique_id=1996311533]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer5" unique_id=944812476]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer5/MarginContainer" unique_id=286022493]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer5/MarginContainer/VBoxContainer" unique_id=2006098502]
+layout_mode = 2
+text = "Thumb"
+
+[node name="Button1" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer5/MarginContainer/VBoxContainer" unique_id=1122468985]
+layout_mode = 2
+text = "Vertical
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button2" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer5/MarginContainer/VBoxContainer" unique_id=10786904]
+layout_mode = 2
+text = "Horizontal
+
+"
+script = ExtResource("2_1wg4m")
+
+[node name="Button3" type="Button" parent="HBoxContainer/CenterContainer/HBoxContainer/PanelContainer5/MarginContainer/VBoxContainer" unique_id=1745124217]
+layout_mode = 2
+text = "Button
+"
+script = ExtResource("2_1wg4m")
 
 [node name="VBoxContainer5" type="VBoxContainer" parent="HBoxContainer/CenterContainer/HBoxContainer" unique_id=1244766366]
 layout_mode = 2
@@ -105,3 +284,5 @@ text = "Apply"
 [node name="Button3" type="Button" parent="HBoxContainer/CenterContainer2/VBoxContainer" unique_id=2116825449]
 layout_mode = 2
 text = "Delete"
+
+[node name="Timer" type="Timer" parent="." unique_id=501832204]

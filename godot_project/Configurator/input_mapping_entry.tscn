@@ -1,0 +1,121 @@
+[gd_scene format=3 uid="uid://diplumdxldpir"]
+
+[ext_resource type="Script" uid="uid://c51auqrxufgak" path="res://Configurator/input_mapping_entry.gd" id="1_72v81"]
+
+[node name="InputMappingEntry" type="VBoxContainer" unique_id=495226874]
+script = ExtResource("1_72v81")
+
+[node name="HSeparator" type="HSeparator" parent="." unique_id=254977316]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="." unique_id=273862332]
+visible = false
+layout_mode = 2
+text = "Input Mappings:"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1077495077]
+layout_mode = 2
+
+[node name="PinLabel" type="Label" parent="HBoxContainer" unique_id=719420044]
+visible = false
+layout_mode = 2
+text = "Pin:"
+
+[node name="Pin" type="LineEdit" parent="HBoxContainer" unique_id=1883983089]
+visible = false
+layout_mode = 2
+tooltip_text = "Pin to be used for this input mapping.
+Pin can be formatted as raw number 1, 2, 3... or formatted with the bank A1, A2, B5, B6..."
+max_length = 3
+
+[node name="ReportDeviceLabel" type="Label" parent="HBoxContainer" unique_id=897773091]
+layout_mode = 2
+text = "Report device:"
+
+[node name="ReportDevice" type="OptionButton" parent="HBoxContainer" unique_id=1944923595]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "The type of report device that this input will be interpreted as."
+item_count = 7
+popup/item_0/text = "None"
+popup/item_0/id = 0
+popup/item_1/text = "Keyboard"
+popup/item_1/id = 1
+popup/item_2/text = "Mouse"
+popup/item_2/id = 2
+popup/item_3/text = "Gamepad"
+popup/item_3/id = 3
+popup/item_3/disabled = true
+popup/item_4/text = "Gamepad Button"
+popup/item_4/id = 4
+popup/item_5/text = "Gamepad Hat"
+popup/item_5/id = 5
+popup/item_6/text = "Gamepad Axis"
+popup/item_6/id = 6
+
+[node name="InputIDLabel" type="Label" parent="HBoxContainer" unique_id=1293285483]
+layout_mode = 2
+text = "Input ID:"
+
+[node name="InputID" type="LineEdit" parent="HBoxContainer" unique_id=540670766]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+tooltip_text = "The input identifier for this mapping.
+See: Enums
+Examples: 
+Keyboard: HID_KEY_A, HID_KEY_B...
+Mouse: MOUSE_BUTTON_LEFT, SCROLL_DOWN, MOUSE_LEFT...
+Gamepad: GAMEPAD_BUTTON_3, GAMEPAD_BUTTON_X, GAMEPAD_LEFT_TRIGGER..."
+theme_override_constants/minimum_character_width = 13
+
+[node name="Inverted" type="CheckBox" parent="HBoxContainer" unique_id=1500741761]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Whether this input mapping should be interpreted as negative.
+Note: This is not the same as the Pin's inactive value setting."
+text = "Inverted"
+
+[node name="FoldableContainer" type="FoldableContainer" parent="." unique_id=297860438]
+visible = false
+layout_mode = 2
+folded = true
+title = "Advanced Options"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="FoldableContainer" unique_id=1529045137]
+visible = false
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="FoldableContainer/VBoxContainer" unique_id=1052320656]
+layout_mode = 2
+
+[node name="Label3" type="Label" parent="FoldableContainer/VBoxContainer/HBoxContainer" unique_id=1248061589]
+layout_mode = 2
+text = "scale"
+
+[node name="Label4" type="Label" parent="FoldableContainer/VBoxContainer/HBoxContainer" unique_id=1294780254]
+layout_mode = 2
+text = "deadzone"
+
+[node name="Label" type="Label" parent="FoldableContainer/VBoxContainer/HBoxContainer" unique_id=388915517]
+layout_mode = 2
+text = "max report value"
+
+[node name="Label2" type="Label" parent="FoldableContainer/VBoxContainer/HBoxContainer" unique_id=707947650]
+layout_mode = 2
+text = "activation value"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="FoldableContainer/VBoxContainer" unique_id=619387646]
+layout_mode = 2
+
+[node name="Label5" type="Label" parent="FoldableContainer/VBoxContainer/HBoxContainer2" unique_id=2076985826]
+layout_mode = 2
+text = "change amount before update"
+
+[node name="Label6" type="Label" parent="FoldableContainer/VBoxContainer/HBoxContainer2" unique_id=1536616857]
+layout_mode = 2
+text = "quick release"
+
+[node name="Label7" type="Label" parent="FoldableContainer/VBoxContainer/HBoxContainer2" unique_id=1345042975]
+layout_mode = 2
+text = "counter strafe help time"

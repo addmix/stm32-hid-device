@@ -25,6 +25,15 @@ func add_augmentation(aug : Augmentation) -> void:
 func get_data_size() -> int:
 	return Enums.SECTION_HEADER_BYTE_SIZE + get_pin_data_size() + Enums.SECTION_HEADER_BYTE_SIZE + get_mapping_data_size() + Enums.SECTION_HEADER_BYTE_SIZE + get_augment_data_size();
 
+func get_data() -> PackedByteArray:
+	var data_buffer := PackedByteArray()#u_int8_t data_buffer[data_length];
+	
+	data_buffer += get_pin_data()
+	data_buffer += get_mapping_data() #get_mapping_data(data_buffer_index);
+	data_buffer += get_augment_data() #get_augment_data(data_buffer_index);
+	
+	return data_buffer
+
 func get_pin_data_size(index : int = 255) -> int:
 	if not index == 255:
 		return PinDeclaration.BYTE_SIZE

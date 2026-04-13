@@ -16,6 +16,10 @@ run/enable_alt_space_menu=true
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+Serial="*uid://bni0bwpr857q6"
+
 [display]
 
 window/energy_saving/keep_screen_on=false

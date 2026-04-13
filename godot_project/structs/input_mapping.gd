@@ -8,8 +8,8 @@ class_name InputMapping
 @export var max_report_value : int = 255
 @export var activation_value : int = 255
 @export var scale : float = float(max_report_value) / 1024.0 + 0.02
-@export var deadzone : int = float(max_report_value) * 0.04
-@export var change_amount_before_update : int = float(max_report_value) * 0.01
+@export var deadzone : int = int(float(max_report_value) * 0.04)
+@export var change_amount_before_update : int = int(float(max_report_value) * 0.01)
 @export var quick_release : bool = false #unimplemented
 @export var counter_strafe_help_time_ms : int = 0 #unimplemented
 
@@ -20,7 +20,7 @@ func _init(
 	_invert : bool = invert,
 	_max_report_value : int = max_report_value,
 	_activation_value : int = activation_value,
-	_scale : int = scale,
+	_scale : float = scale,
 	_deadzone : int = deadzone,
 	_change_amount_before_update : int = change_amount_before_update,
 	_quick_release : bool = quick_release,

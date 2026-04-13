@@ -1,15 +1,17 @@
 [gd_scene format=3 uid="uid://ctjp465rpd8bf"]
 
 [ext_resource type="Script" uid="uid://b14sbbfed02aj" path="res://Configurator/input_editor.gd" id="1_qx0mc"]
+[ext_resource type="PackedScene" uid="uid://diplumdxldpir" path="res://Configurator/input_mapping_entry.tscn" id="2_qx0mc"]
 
 [node name="InputEditor" type="PopupPanel" unique_id=1198437680]
 oversampling_override = 1.0
-size = Vector2i(403, 408)
+size = Vector2i(744, 400)
 visible = true
+unresizable = false
 script = ExtResource("1_qx0mc")
 
 [node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1506340896]
-custom_minimum_size = Vector2(0, 400)
+custom_minimum_size = Vector2(0, 300)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -21,6 +23,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
+vertical_scroll_mode = 4
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ScrollContainer" unique_id=694534007]
 layout_mode = 2
@@ -38,7 +41,25 @@ text = "Edit Button:"
 layout_mode = 2
 text = "%s Button name"
 
+[node name="ClearButton" type="Button" parent="ScrollContainer/VBoxContainer/Header" unique_id=384517338]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "Clear"
+
+[node name="ClearConfirmationDialog" type="ConfirmationDialog" parent="ScrollContainer/VBoxContainer/Header/ClearButton" unique_id=2047989819]
+oversampling_override = 1.0
+title = "Are you sure?"
+position = Vector2i(0, 36)
+size = Vector2i(341, 100)
+exclusive = false
+popup_window = true
+ok_button_text = "Clear inputs"
+dialog_text = "This will clear all inputs on the current pin"
+
 [node name="InputMappingEntries" type="VBoxContainer" parent="ScrollContainer/VBoxContainer" unique_id=588587502]
+layout_mode = 2
+
+[node name="InputMappingEntry" parent="ScrollContainer/VBoxContainer/InputMappingEntries" unique_id=495226874 instance=ExtResource("2_qx0mc")]
 layout_mode = 2
 
 [node name="Pin" type="VBoxContainer" parent="ScrollContainer/VBoxContainer" unique_id=874268485]
@@ -79,4 +100,6 @@ layout_mode = 2
 layout_mode = 2
 text = "Add Input"
 
+[connection signal="pressed" from="ScrollContainer/VBoxContainer/Header/ClearButton" to="ScrollContainer/VBoxContainer/Header/ClearButton/ClearConfirmationDialog" method="popup_centered"]
+[connection signal="confirmed" from="ScrollContainer/VBoxContainer/Header/ClearButton/ClearConfirmationDialog" to="." method="_on_clear_confirmation_dialog_confirmed"]
 [connection signal="pressed" from="ScrollContainer/VBoxContainer/AddInput" to="." method="_on_add_input_pressed"]

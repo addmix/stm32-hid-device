@@ -1,11 +1,27 @@
 [gd_scene format=3 uid="uid://bfavp6t0uojhy"]
 
 [ext_resource type="Theme" uid="uid://dh4p4tac0rpu7" path="res://theme.tres" id="1_7mycd"]
-[ext_resource type="Script" uid="uid://iybkkne7rxrw" path="res://main.gd" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://u7skob8fd4a4" path="res://structs/augmentation.gd" id="2_lquwl"]
 [ext_resource type="Script" uid="uid://xwpnryfeckix" path="res://structs/input_mapping.gd" id="3_7mycd"]
 [ext_resource type="Script" uid="uid://cbyrawfxuoa0k" path="res://structs/pin_declaration.gd" id="4_272bh"]
 [ext_resource type="Script" uid="uid://d1x5k5i6sivu6" path="res://structs/config.gd" id="5_5vw27"]
+
+[sub_resource type="GDScript" id="GDScript_efxa6"]
+script/source = "extends RichTextLabel
+
+func _ready() -> void:
+	text = \"\"
+	
+	Serial.device_connected.connect(func(port : String):
+		text += \"Device connected on port: \" + port + \"\\n\"
+	)
+	Serial.device_disconnected.connect(func(port : String):
+		text += \"Device disconnected from port: \" + port + \"\\n\"
+	)
+	Serial.data_received.connect(func(data : String):
+		text += data
+	)
+"
 
 [sub_resource type="GDScript" id="GDScript_ig7tw"]
 script/source = "extends Button
@@ -18,7 +34,7 @@ func _on_pressed() -> void:
 script/source = "extends Button
 
 func _on_pressed() -> void:
-	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.Reset))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.Reset))
 "
 
 [sub_resource type="GDScript" id="GDScript_kek77"]
@@ -26,7 +42,7 @@ script/source = "extends Button
 
 
 func _on_pressed() -> void:
-	$\"../../../..\".serial_disconnect()
+	Serial.serial_disconnect()
 "
 
 [sub_resource type="GDScript" id="GDScript_lquwl"]
@@ -35,7 +51,7 @@ script/source = "extends HBoxContainer
 func _on_send_command_pressed(text : String = \"\") -> void:
 	var bytes_to_send : PackedByteArray = %CommandEdit.text.c_escape().to_utf8_buffer()
 	%CommandEdit.text = \"\"
-	$\"../..\".write(SerialCommandBuilder.create_command(Enums.Commands.TextCommand, bytes_to_send))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.TextCommand, bytes_to_send))
 "
 
 [sub_resource type="GDScript" id="GDScript_5vw27"]
@@ -49,29 +65,29 @@ func _ready() -> void:
 script/source = "extends HBoxContainer
 
 func _on_list_configs_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ListConfigs))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.ListConfigs))
 
 func _on_list_pins_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ListPins, [Enums.text_to_index($Index.text)]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.ListPins, [Enums.text_to_index($Index.text)]))
 
 func _on_list_mappings_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ListMappings, [Enums.text_to_index($Index.text)]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.ListMappings, [Enums.text_to_index($Index.text)]))
 
 func _on_list_augments_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ListAugments, [Enums.text_to_index($Index.text)]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.ListAugments, [Enums.text_to_index($Index.text)]))
 
 
 func _on_get_configs_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.GetConfigs))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.GetConfigs))
 
 func _on_get_pins_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.GetPins, [Enums.text_to_index($Index.text)]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.GetPins, [Enums.text_to_index($Index.text)]))
 
 func _on_get_mappings_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.GetMappings, [Enums.text_to_index($Index.text)]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.GetMappings, [Enums.text_to_index($Index.text)]))
 
 func _on_get_augments_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.GetAugments, [Enums.text_to_index($Index.text)]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.GetAugments, [Enums.text_to_index($Index.text)]))
 "
 
 [sub_resource type="GDScript" id="GDScript_7mycd"]
@@ -82,7 +98,7 @@ func _on_add_pin_button_pressed() -> void:
 	var pin : int = Enums.text_to_pin($Pin.text) 
 	var analog : bool = $Analog.button_pressed
 	
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.PinDeclaration, [pin, analog]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.PinDeclaration, [pin, analog]))
 	
 	$Pin.text = \"\"
 	$Analog.button_pressed = false
@@ -103,7 +119,7 @@ func _on_add_mapping_button_pressed() -> void:
 	if $Pin.text == \"\" or $ReportDevice.selected == -1 or $InputID.text == \"\":
 		return
 	
-	$\"../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.InputMapping, [pin, input_device, input_id, inverted]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.InputMapping, [pin, input_device, input_id, inverted]))
 	
 	$Pin.text = \"\"
 	$ReportDevice.selected = -1
@@ -118,19 +134,19 @@ func reset() -> void:
 	$Index.text = \"\"
 
 func _on_delete_configs_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ClearConfigs))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.ClearConfigs))
 	reset()
 
 func _on_delete_pins_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ClearPin, [Enums.text_to_index($Index.text)]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.ClearPin, [Enums.text_to_index($Index.text)]))
 	reset()
 
 func _on_delete_mappings_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ClearMap, [Enums.text_to_index($Index.text)]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.ClearMap, [Enums.text_to_index($Index.text)]))
 	reset()
 
 func _on_delete_augments_button_pressed() -> void:
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.ClearAugments, [Enums.text_to_index($Index.text)]))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.ClearAugments, [Enums.text_to_index($Index.text)]))
 	reset()
 "
 
@@ -148,7 +164,7 @@ func _on_set_configs_pressed() -> void:
 	data_buffer += config.get_augment_data() #get_augment_data(data_buffer_index);
 	
 	print(\"data buffer \", data_buffer)
-	$\"../../../../..\".write(SerialCommandBuilder.create_command(Enums.Commands.SetConfigs, data_buffer))
+	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.SetConfigs, data_buffer))
 "
 
 [sub_resource type="Resource" id="Resource_7mycd"]
@@ -192,7 +208,6 @@ grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme = ExtResource("1_7mycd")
-script = ExtResource("1_ig7tw")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1741309776]
 layout_mode = 2
@@ -204,6 +219,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 text = "Example:"
 scroll_following = true
+script = SubResource("GDScript_efxa6")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/SerialOutput" unique_id=230573743]
 layout_mode = 1

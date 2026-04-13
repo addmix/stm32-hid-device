@@ -26,7 +26,7 @@ func _on_left_click() -> void:
 	input_editor.pin_name = pin.pin_name
 	input_editor.initialize_ui_with_data(input_mappings)
 	add_child(input_editor)
-	input_editor.popup(Rect2i(get_global_mouse_position(), Vector2i(1, 1)))
+	input_editor.popup_centered() #(Rect2i(get_global_mouse_position(), Vector2i(1, 1)))
 	
 	input_editor.popup_hide.connect(func():
 		input_editor.return_data_from_ui(input_mappings) 

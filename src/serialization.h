@@ -129,7 +129,14 @@ void parse_line() {//receive command
     }
     
     u_int8_t payload_buffer[payload_size];
-    u_int16_t bytes_read = Serial.readBytes(payload_buffer, payload_size);
+    
+    uint16_t bytes_read = 0;
+    //this must be read manually, because the default Serial.readBytes() function doesn't clear the buffer until it's completion.
+    while (bytes_read < payload_size) {
+        if (Serial.available()) {
+            payload_buffer[bytes_read++] = Serial.read();
+        }
+    }
 
     //TODO add better checks to the lenght of the payload buffer
 

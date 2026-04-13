@@ -1,6 +1,9 @@
 extends Resource
 class_name Config
 
+#TODO - maybe add a config identifier name/checksum so that the UI can automatically load the
+# - config that is currently on the device?
+
 @export var pin_map : Dictionary[int, PinDeclaration] = {
 	
 }

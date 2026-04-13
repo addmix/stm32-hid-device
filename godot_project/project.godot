@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Cybarrghh"
-run/main_scene="uid://bfavp6t0uojhy"
+run/main_scene="uid://c7otkv26auj40"
 run/enable_alt_space_menu=true
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"

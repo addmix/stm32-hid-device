@@ -3,6 +3,7 @@
 [ext_resource type="Theme" uid="uid://dh4p4tac0rpu7" path="res://theme.tres" id="1_5ps1h"]
 [ext_resource type="Script" uid="uid://f6orq33rkxm5" path="res://Configurator/pin_button.gd" id="2_1wg4m"]
 [ext_resource type="Script" uid="uid://cbyrawfxuoa0k" path="res://structs/pin_declaration.gd" id="3_oo0gl"]
+[ext_resource type="PackedScene" uid="uid://bfavp6t0uojhy" path="res://serial_monitor.tscn" id="4_oo0gl"]
 
 [sub_resource type="GDScript" id="GDScript_i1jgh"]
 script/source = "extends MarginContainer
@@ -255,6 +256,14 @@ func _on_confirmed() -> void:
 func _on_canceled() -> void:
 	config = null
 	filepath = \"\"
+"
+
+[sub_resource type="GDScript" id="GDScript_oo0gl"]
+script/source = "extends Button
+
+
+func _on_pressed() -> void:
+	$\"../SerialMonitor\".visible = true
 "
 
 [node name="Configurator" type="MarginContainer" unique_id=954300310]
@@ -584,6 +593,17 @@ dialog_autowrap = true
 
 [node name="Timer" type="Timer" parent="." unique_id=501832204]
 
+[node name="OpenSerialMonitor" type="Button" parent="." unique_id=869067681]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+text = "Serial Monitor"
+script = SubResource("GDScript_oo0gl")
+
+[node name="SerialMonitor" parent="." unique_id=1401305772 instance=ExtResource("4_oo0gl")]
+visible = false
+layout_mode = 2
+
 [connection signal="pressed" from="HBoxContainer/CenterContainer2/VBoxContainer/ApplyButton" to="." method="_on_apply_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/CenterContainer2/VBoxContainer/ClearButton" to="HBoxContainer/CenterContainer2/VBoxContainer/ClearButton/ClearConfirmationDialog" method="popup_centered"]
 [connection signal="confirmed" from="HBoxContainer/CenterContainer2/VBoxContainer/ClearButton/ClearConfirmationDialog" to="." method="_on_clear_confirmation_dialog_confirmed"]
@@ -594,3 +614,4 @@ dialog_autowrap = true
 [connection signal="pressed" from="HBoxContainer/CenterContainer2/VBoxContainer/SaveButton" to="." method="_on_save_button_pressed"]
 [connection signal="pressed" from="HBoxContainer/CenterContainer2/VBoxContainer/DeleteButton" to="HBoxContainer/CenterContainer2/VBoxContainer/DeleteButton/DeleteConfirmationDialog" method="popup_centered"]
 [connection signal="confirmed" from="HBoxContainer/CenterContainer2/VBoxContainer/DeleteButton/DeleteConfirmationDialog" to="." method="_on_delete_confirmation_dialog_confirmed"]
+[connection signal="pressed" from="OpenSerialMonitor" to="OpenSerialMonitor" method="_on_pressed"]

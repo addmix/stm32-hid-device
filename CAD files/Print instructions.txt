@@ -1,0 +1,90 @@
+- Base x1 PLA
+- Handrest x1 PLA
+
+Thumb (total x1)
+
+- ThumbNutHolder x1 PLA
+- ThumbRail x1 PLA
+- ThumbMount x1 PLA
+- Body11 x1 PLA (or a higher-temperature filament)
+- Backplate x1 PLA
+
+- LargeFoot x1 TPU (or other grippy, rubbery filament)
+- LittleFoot x1 TPU (or other grippy, rubbery filament)
+
+For each finger (total x4)
+
+- NutHolder x1 (total x4) PLA
+- MountRail x1 (total x4) PLA
+- FingerTowerRingClamp x1 (total x4) PLA (alternatively PETG, nylon, or other flexible/strong filament)
+- FingerTowerBottom x1 (total x4) PLA
+- FingerTowerTop x1 (total x4) PLA
+- FingerPaddle x4 (total x16) PLA
+
+- LargeFoot x1 (total x4) TPU (or other grippy, rubbery filament)
+- LittleFoot x1 (total x4) TPU (or other grippy, rubbery filament)
+
+
+
+Combined total for non-3d printed materials
+
+Electronic components:
+- STM32F411 x1 - https://www.amazon.com/dp/B0DLNDY4V7 (pack of 2, any stm32 should work, but this is the exact model I used)
+- (Optional, but recommended) 2.54mm pitch terminal block 10 pin x5 - https://www.amazon.com/dp/B0BLHJY5NT
+- USB-C cable x1
+- Ethernet cable ~250mm length x4 - use an old ethernet cable, it's not worth buying a spool of ethernet cable for this project
+- CYT1073 microswitch (metal rocker tab not required) x16 - https://www.amazon.com/dp/B088W8WMTB
+
+Screws/fasteners
+- Hot glue
+- M3x5.7mm heat set insert x3 (total x3) - https://www.amazon.com/dp/B0F5PM83H7
+- M3x6mm screws x3
+- M3x10mm screw x34
+- M3 nut x34
+- 1.5mm steel wire (straight), cut to length ~11.5mm x16 - https://www.amazon.com/dp/B09636CL3N
+
+
+
+non-3d printed material breakdown:
+
+- Hot glue
+- M3x5.7mm heat set insert x3 (total x3) - https://www.amazon.com/dp/B0F5PM83H7
+- M3x6mm screws x3 (total x3)
+- STM32F411 x1 (total x1) - https://www.amazon.com/dp/B0DLNDY4V7 (pack of 2, any stm32 should work, but this is the exact model I used)
+- (Optional, but recommended) 2.54mm pitch terminal block 10 pin x5 (total x5) - https://www.amazon.com/dp/B0BLHJY5NT
+- USB-C cable x1 (total x1)
+
+Thumb (total x1)
+
+- M3x10mm screw x6 (total x6)
+- M3 nut x6 (total x6)
+- Thumbstick module x1 - https://www.amazon.com/dp/B0FPFS5FGT (pack of 2, alternative options available)
+- Ethernet cable ~250mm length x1 (total x1) - use an old ethernet cable, it's not worth buying a spool of ethernet cable for this project
+
+For each finger (total x4)
+
+- M3x10mm screw x7 (total x28)
+- M3 nut x7 (total x28)
+- 1.5mm steel wire (straight), cut to length ~11.5mm x4 (total x16) - https://www.amazon.com/dp/B09636CL3N
+- Ethernet cable ~250mm length x1 (total x4) - use an old ethernet cable, it's not worth buying a spool of ethernet cable for this project
+- CYT1073 microswitch (metal rocker tab not required) x4 (total x16) - https://www.amazon.com/dp/B088W8WMTB
+
+
+Total cost, at time of writing to build x2 of this device:
+misc filament, less than 1kg, ~$10
+STM32F411CEU6 $16
+Thumbstick modules $20
+CYT1073 microswitches $5
+1.5mm steel wire $7
+2.54mm pitch terminal blocks (10 pin) $9
+M3 screws/insert assortment <$5
+Old Ethernet cable - (used) $0
+
+Total cost: $71 / 2 =
+$35.5 per device
+
+
+
+Helpful assembly tips:
+Make sure the holes for the 1.5mm wire are big enough (make sure to print using precise holes/polyholes in your slicer)
+You can clean up the holes, and ensure free movement by placing a length of 1.5mm wire in a power drill, and drill through the holes. The finger paddles should spin freely. The two halves of the finger tower should be a friction fit with the 1.5mm wire (you don't want the wire to fall out)

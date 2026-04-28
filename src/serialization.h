@@ -260,7 +260,7 @@ void parse_line() {//receive command
             for(size_t i = 0; i < objects_to_parse; ++i) {
                 pin_map.insert({pin_buffer_print_index->pin_name, *pin_buffer_print_index});
                 //pin_buffer_print_index->print();
-                //pin_buffer_print_index++;
+                pin_buffer_print_index++;
             }
 			
 
@@ -284,7 +284,7 @@ void parse_line() {//receive command
             for(size_t i = 0; i < objects_to_parse; ++i) {
                 pin_bindings.push_back(*mapping_buffer_print_index);
                 //mapping_buffer_print_index->print();
-                //mapping_buffer_print_index++;
+                mapping_buffer_print_index++;
             }
             
 			//#Augmentation
@@ -307,7 +307,7 @@ void parse_line() {//receive command
             for(size_t i = 0; i < objects_to_parse; ++i) {
                 augmentations.push_back(*augment_buffer_print_index);
                 //augment_buffer_print_index->print();
-                //augment_buffer_print_index++;
+                augment_buffer_print_index++;
             }
 			
 

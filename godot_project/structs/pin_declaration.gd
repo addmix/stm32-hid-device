@@ -22,10 +22,6 @@ func to_bytes() -> PackedByteArray:
 		inactive_value & 0xFF,
 	])
 
-func _to_string() -> String:
-	return "PinDeclaration(pin_name=%s, analog=%s, inactive_value=%s)" % [pin_name, analog, inactive_value]
-
-
 static func from_bytes(bytes : PackedByteArray) -> PinDeclaration:
 	if bytes.size() != BYTE_SIZE:
 		push_error("Passed byte array does not match the byte size of PinDeclaration.")
@@ -43,3 +39,6 @@ static func from_byte_array(bytes : PackedByteArray) -> Array[PinDeclaration]:
 		array.append(from_bytes(bytes.slice(index, index + BYTE_SIZE)))
 	
 	return array
+
+func _to_string() -> String:
+	return "PinDeclaration(pin_name=%s, analog=%s, inactive_value=%s)" % [pin_name, analog, inactive_value]

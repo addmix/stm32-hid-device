@@ -4,6 +4,8 @@ signal device_connected(port : String)
 signal data_received(data : String)
 signal device_disconnected(port : String)
 
+signal value_returned(value)
+
 #on command received
 
 var serial := GdSerialManager.new()
@@ -56,31 +58,20 @@ var read_buffer : Array = []
 func _on_data(port: String, data: PackedByteArray) -> void:
 	read_buffer += Array(data)
 	
-	print(data)
-	
 	data_received.emit(data.get_string_from_utf8().c_unescape())
 	print(data.get_string_from_utf8().c_unescape())
 	
 	parse_command()
 
-#TODO
-#TODO
-#TODO
-#TODO
-#TODO
-#TODO
-#TODO
-#TODO     Create SetConfig function to send entire formatted block of configs to device
-#TODO       Resource -> Bytes -> Device config
-#TODO
-#TODO
-#TODO
-#TODO
-#TODO
-#TODO
-#TODO
-#TODO
 
+func set_config(config : Config) -> void:
+	write(SerialCommandBuilder.create_command(Enums.Commands.SetConfigs, config.get_data()))
+
+func get_config() -> Config:
+	return null
+	
+	#TODO:
+	
 
 var read_buffer_index : int = 0
 func parse_command() -> void:
@@ -146,42 +137,10 @@ func parse_command() -> void:
 			pass #the device might echo back some info, idk.
 			
 		Enums.Commands.GetConfigs: #device is returning all configs
-			#receive config data from device
-			print("get configs")
-			#TODO: these data_type values aren't actually used by the parser, but they should be.
-			#right now it only works because both codebases agree on the order
-			
-			#PinDeclaration
-			var data_type : int = read_next_byte.call()
-			print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
-			var section_length : int = (read_next_byte.call() << 8) + read_next_byte.call()
-			print("section length=", section_length)
-			print(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			var pins : Array[PinDeclaration] = PinDeclaration.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			print("created pin objects: ", pins)
-			read_buffer_index += section_length
-			
-			#InputMapping
-			data_type = read_next_byte.call()
-			print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
-			section_length = (read_next_byte.call() << 8) + read_next_byte.call()
-			print("section length=", section_length)
-			print(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			var mappings : Array[InputMapping] = InputMapping.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			print("created mapping objects: ", mappings)
-			read_buffer_index += section_length
-			
-			#Augmentation
-			data_type = read_next_byte.call()
-			print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
-			section_length = (read_next_byte.call() << 8) + read_next_byte.call()
-			print("section length=", section_length)
-			print(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			var augments : Array[Augmentation] = Augmentation.from_byte_array(read_buffer.slice(read_buffer_index, read_buffer_index + section_length))
-			print("created augment objects: ", augments)
-			read_buffer_index += section_length
-			
-			print("remaining bytes in buffer=", read_buffer.slice(read_buffer_index))
+			var config := Config.from_bytes(payload.slice(1)) #the command byte doesn't need to be passed to this function
+			#TODO: this is probably a bad way to do it
+			#maybe also add an identifier, so that we know where the data is supposed to be returned.
+			value_returned.emit(config)
 
 		Enums.Commands.GetPins:
 			pass

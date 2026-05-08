@@ -136,6 +136,9 @@ void parse_line() {//receive command
         if (Serial.available()) {
             payload_buffer[bytes_read++] = Serial.read();
         }
+        else {
+            delayMicroseconds(10); //there may be some better solution here
+        }
     }
 
     //TODO add better checks to the lenght of the payload buffer
@@ -314,7 +317,8 @@ void parse_line() {//receive command
 			//print("remaining bytes in buffer=", read_buffer.slice(read_buffer_index))
 
             delay(10);
-            get_configs(); //echo the result back to godot for comparison 
+            //This is a decent idea, however we don't want to overwrite values in the UI in the event there are serialization issues.
+            //get_configs(); //echo the result back to godot for comparison 
             break; //TODO
         }
         case SetPins: {

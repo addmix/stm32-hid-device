@@ -2,13 +2,17 @@ extends Resource
 class_name Config
 
 #TODO - maybe add a config identifier name/checksum so that the UI can automatically load the
-# - config that is currently on the device?
+# - config that is currently on the device? - currently the UI will automatically pull the config from the
+# device, however it shows as a blank preset, which isn't the best UX
 
 @export var pin_map : Dictionary[int, PinDeclaration] = {
 	
 }
 func add_pin(pin : PinDeclaration) -> void:
 	pin_map[pin.pin_name] = pin
+func add_pins(pins : Array[PinDeclaration]) -> void:
+	for pin : PinDeclaration in pins:
+		add_pin(pin)
 
 @export var pin_bindings : Array[InputMapping] = [
 	
@@ -18,17 +22,19 @@ func add_input_mapping(binding : InputMapping) -> void:
 func add_input_mappings(bindings : Array[InputMapping]) -> void:
 	pin_bindings += bindings
 
-
 @export var augmentations : Array[Augmentation] = [
 	
 ]
 func add_augmentation(aug : Augmentation) -> void:
 	augmentations.append(aug)
+func add_augmentations(augs : Array[Augmentation]) -> void:
+	augmentations += augs
 
-func get_data_size() -> int:
-	return Enums.SECTION_HEADER_BYTE_SIZE + get_pin_data_size() + Enums.SECTION_HEADER_BYTE_SIZE + get_mapping_data_size() + Enums.SECTION_HEADER_BYTE_SIZE + get_augment_data_size();
+var byte_size : int:
+	get:
+		return Enums.SECTION_HEADER_BYTE_SIZE + get_pin_data_size() + Enums.SECTION_HEADER_BYTE_SIZE + get_mapping_data_size() + Enums.SECTION_HEADER_BYTE_SIZE + get_augment_data_size()
 
-func get_data() -> PackedByteArray:
+func to_bytes() -> PackedByteArray:
 	var data_buffer := PackedByteArray()#u_int8_t data_buffer[data_length];
 	
 	data_buffer += get_pin_data()
@@ -36,6 +42,50 @@ func get_data() -> PackedByteArray:
 	data_buffer += get_augment_data() #get_augment_data(data_buffer_index);
 	
 	return data_buffer
+
+#TODO: UNTESTED
+static func from_bytes(bytes : PackedByteArray) -> Config:
+	var config := Config.new()
+	
+	var array := bytes as Array
+	
+	#this logic should probably be reusable,
+	#TODO: make some sort of ByteBuffer class to handle this stuff.
+	
+	var data_type : int = array.pop_front()
+	print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
+	var section_length : int = (array.pop_front() << 8) + array.pop_front()
+	print("section length=", section_length)
+	print(array.slice(0, section_length))
+	config.add_pins(PinDeclaration.from_byte_array(array.slice(0, section_length)))
+	array = array.slice(section_length)
+	
+	#InputMapping
+	data_type = array.pop_front()
+	print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
+	section_length = (array.pop_front() << 8) + array.pop_front()
+	print("section length=", section_length)
+	print(array.slice(0, section_length))
+	config.add_input_mappings(InputMapping.from_byte_array(array.slice(0, section_length)))
+	array = array.slice(section_length)
+	
+	#Augmentation
+	data_type = array.pop_front()
+	print("data type=", data_type, "=", Enums.Commands.find_key(data_type))
+	section_length = (array.pop_front() << 8) + array.pop_front()
+	print("section length=", section_length)
+	print(array.slice(0, section_length))
+	config.add_augmentations(Augmentation.from_byte_array(array.slice(0, section_length)))
+	array = array.slice(section_length)
+	
+	print("remaining bytes in buffer=", array)
+	
+	return config
+
+
+
+
+
 
 func get_pin_data_size(index : int = 255) -> int:
 	if not index == 255:

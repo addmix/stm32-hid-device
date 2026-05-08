@@ -14,9 +14,11 @@ func _ready() -> void:
 	
 	Serial.device_connected.connect(func(port : String):
 		text += \"Device connected on port: \" + port + \"\\n\"
+		print(\"Device connected on port: \" + port + \"\\n\")
 	)
 	Serial.device_disconnected.connect(func(port : String):
 		text += \"Device disconnected from port: \" + port + \"\\n\"
+		print(\"Device disconnected from port: \" + port + \"\\n\")
 	)
 	Serial.data_received.connect(func(data : String):
 		text += data

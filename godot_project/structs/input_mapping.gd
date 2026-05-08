@@ -70,19 +70,13 @@ func to_bytes() -> PackedByteArray:
 		counter_strafe_help_time_ms & 0xFF,
 	])
 
-func _to_string() -> String:
-	return "InputMapping(pin_name=%s, input_type=%s, input_id=%s, invert=%s, max_report_value=%s, \
-	activation_value=%s, scale=%s, deadzone=%s, change_amount_before_update=%s, quick_release=%s, \
-	counter_strafe_help_time_ms=%s)" % [pin_name, input_type, input_id, invert, max_report_value, \
-	activation_value, scale, deadzone, change_amount_before_update, quick_release, counter_strafe_help_time_ms]
-
 static func from_bytes(bytes : PackedByteArray) -> InputMapping:
 	if bytes.size() != BYTE_SIZE:
 		push_error("Passed byte array does not match the byte size of PinDeclaration.")
 	
 	var _pin_name : int = bytes[0]
 	var _input_type : int = bytes[1]
-	var _input_id : int = bytes[2] + (bytes[3] << 8)
+	var _input_id : int = (bytes[2] << 8) + bytes[3]
 	var _invert : bool = bytes[4]
 	var _max_report_value : int = (bytes[5] << 8) + bytes[6]
 	var _activation_value : int = (bytes[7] << 8) + bytes[8]
@@ -106,3 +100,9 @@ static func from_byte_array(bytes : PackedByteArray) -> Array[InputMapping]:
 		array.append(from_bytes(bytes.slice(index, index + BYTE_SIZE)))
 	
 	return array
+
+func _to_string() -> String:
+	return "InputMapping(pin_name=%s, input_type=%s, input_id=%s, invert=%s, max_report_value=%s, \
+	activation_value=%s, scale=%s, deadzone=%s, change_amount_before_update=%s, quick_release=%s, \
+	counter_strafe_help_time_ms=%s)" % [pin_name, input_type, input_id, invert, max_report_value, \
+	activation_value, scale, deadzone, change_amount_before_update, quick_release, counter_strafe_help_time_ms]

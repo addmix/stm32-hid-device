@@ -136,9 +136,9 @@ void parse_line() {//receive command
         if (Serial.available()) {
             payload_buffer[bytes_read++] = Serial.read();
         }
-        else {
-            delayMicroseconds(10); //there may be some better solution here
-        }
+        //else {
+        //    delayMicroseconds(10); //there may be some better solution here
+        //}
     }
 
     //TODO add better checks to the lenght of the payload buffer

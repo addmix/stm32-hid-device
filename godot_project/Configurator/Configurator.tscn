@@ -26,6 +26,8 @@ func build_config_from_editor() -> Config:
 		config.add_pin(pin_button.pin)
 		config.add_input_mappings(pin_button.input_mappings)
 	
+	#TODO: Add augment UI
+	
 	return config
 
 func fill_editor_from_config(config : Config) -> void:
@@ -66,6 +68,7 @@ func _on_apply_button_pressed() -> void:
 	
 	#TODO - convert the main serial logic from the main scene into a singleton, and then run this command on the singleton
 	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.SetConfigs, config.to_bytes()))
+	print(\"Bytes to send: \", SerialCommandBuilder.create_command(Enums.Commands.SetConfigs, config.to_bytes()))
 
 func _on_clear_confirmation_dialog_confirmed() -> void:
 	clear()
@@ -145,6 +148,7 @@ func _on_overwrite_confirmation_dialog_file_list_changed() -> void:
 
 
 func _on_pull_confirmation_dialog_confirmed() -> void:
+	print(\"sending get configs command\")
 	Serial.write(SerialCommandBuilder.create_command(Enums.Commands.GetConfigs))
 
 func _on_serial_device_connected(port : String) -> void:

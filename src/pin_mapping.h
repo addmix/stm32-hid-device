@@ -16,11 +16,11 @@ struct PinMapping {
   bool invert = false;
 
   u_int16_t max_report_value = 255;
-  u_int16_t activation_value = 50; 
+  u_int16_t activation_value = 20; 
   //int range = ADC_MAX_VALUE / 2; //might still be needed, haven't gotten to that step yet.
 
   float scale = (float) max_report_value / (float) ADC_MAX_VALUE + 0.02;
-  u_int8_t deadzone = (float) 255 * 0.04;
+  u_int8_t deadzone = (float) 255.0 * 0.1; //TODO: figure out 16 bit analog axes for gamepad reporting
 
   u_int16_t change_amount_before_update = (float) max_report_value * 0.01;
 

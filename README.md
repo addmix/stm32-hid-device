@@ -1,6 +1,8 @@
 # STM32 HID Device
 ### The "Cybarrghh"
 
+<img src="images/completed.jpg" alt="Image of the completed STM32 device" height="256"/>
+
 YouTube Video:
 
 ## Notable Features:

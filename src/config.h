@@ -38,10 +38,10 @@ std::vector<PinMapping> pin_bindings = {
     PinMapping(PA_2, KEYBOARD, HID_KEY_M),  //click
     
     //thumbstick
-    PinMapping(PA_1, KEYBOARD, HID_KEY_D, false),
-    PinMapping(PA_0, KEYBOARD, HID_KEY_W, false),
-    PinMapping(PA_1, KEYBOARD, HID_KEY_A, true),  //y (+3.3v up)
-    PinMapping(PA_0, KEYBOARD, HID_KEY_S, true),  //x (+3.3v forward)
+    PinMapping(PA_1, KEYBOARD, HID_KEY_D, true),
+    PinMapping(PA_0, KEYBOARD, HID_KEY_W, true),
+    PinMapping(PA_1, KEYBOARD, HID_KEY_A, false),  //y (+3.3v up)
+    PinMapping(PA_0, KEYBOARD, HID_KEY_S, false),  //x (+3.3v forward)
     
     PinMapping(PA_1, GAMEPAD_AXIS, GAMEPAD_LEFT_STICK_X, false),
     PinMapping(PA_0, GAMEPAD_AXIS, GAMEPAD_LEFT_STICK_Y, true),
@@ -72,8 +72,8 @@ std::vector<PinMapping> pin_bindings = {
 };
 
 std::vector<InputAugmentation> augmentations = {
-  InputAugmentation::rotation(PA_0, PA_1, ROTATION, radians(-0.0f)),
-  InputAugmentation::rotation(PA_1, PA_0, ROTATION, radians(-0.0f)),
+  InputAugmentation::rotation(PA_0, PA_1, ROTATION, radians(15.0f)),
+  InputAugmentation::rotation(PA_1, PA_0, ROTATION, radians(15.0f)),
 };
 
 //TODO remove these duplicate defines

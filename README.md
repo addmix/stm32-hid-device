@@ -1,19 +1,21 @@
 # STM32 HID Device
-### The "Cybarrghh"
+### The "Cybarrghh" is a custom ergonomic STM32 USB HID controller with configurable firmware and desktop configuration software.
 
 <img src="images/completed.jpg" alt="Image of the completed STM32 device" height="256"/>
 
 YouTube Video:
 
-## Notable Features:
-
+## Features:
+- Custom STM32 firmware
+- Desktop configuration app
+- USB HID keyboard/mouse/gamepad implementation
+- High polling rate (500hz+)
+- NKRO keyboard implementation (allows all keys to be pressed simultaneously)
 - Ergonomic design
 - Short throw switches
 - Complete adjustability
 - Input remapping, supporting Keyboard, Mouse, and Gamepad input types
-- Desktop app to configure inputs which can be saved in presets
-- NKRO keyboard implementation
-- High polling rate (500hz+)
+
 
 ## Hardware
 

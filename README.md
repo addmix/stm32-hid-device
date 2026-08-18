@@ -3,7 +3,7 @@
 
 <img src="images/completed.jpg" alt="Image of the completed STM32 device" height="256"/>
 
-YouTube Video:
+[![Reinventing the Gaming Keyboard](https://img.youtube.com/vi/1f9JZ_KbQRE/mqdefault.jpg)](https://youtu.be/1f9JZ_KbQRE)   
 
 ## Features:
 - Custom STM32 firmware
@@ -29,7 +29,7 @@ YouTube Video:
 - Hot glue
 - Assortment of M3 screws
 
-> For a more detailed materials and cost breakdown, see `/CAD files/Print instructions.txt`
+> For a more detailed materials and cost breakdown, see the [print instructions](/CAD%20files/Print%20instructions.txt)
 
 ## Software
 
